@@ -1,10 +1,12 @@
-#07/04/2022
+#08/04/2022
 #Chico Demmenie
 #Aethra/Scraper/Main.py
 
 import tweepy
 import json
 import re
+from videohash import VideoHash
+from MongoAccess import mongoServe
 
 
 class main:
@@ -14,6 +16,9 @@ class main:
     def __init__(self):
 
         """Initialises the core class functions"""
+
+        #Making sure the Mongo database works.
+        mongoServe()
 
         #Retrieving OAuth Twitter keys.
         self.keys = json.load(open("../data/keys.json", "r"))
@@ -40,6 +45,7 @@ class main:
         #Launching the video save for twitter
         self.twitSave()
 
+
     #---------------------------------------------------------------------------
     def twitSave(self):
 
@@ -56,7 +62,38 @@ class main:
         for tweet in list.data:
 
             #Getting the tweet's media
-            media = self.api.get_status(tweet.id)
+            media = self.client.get_tweet(tweet.id,
+                expansions="attachments.media_keys").includes
+
+            #Finding out if there is a video attached to the tweet
+            if media != {} and media["media"][0].type == "video":
+
+                #Creating a hash of the video.
+                url = f"https://twitter.com/{tweet.author_id}/status/{tweet.id}"
+
+                self.videoHash(url)
+
+                #Searching the database to see if this video already exists.
+                mongoServe.entryCheck(url, self.videoHashHex)
+
+                self.videoIndex()
+
+
+    #---------------------------------------------------------------------------
+    def videoHash(self, url):
+
+        """Hashes videos for storage."""
+
+        self.videoHashHex = VideoHash(url=url).hash_hex
+        self.videoHashDec = int(self.videoHashHex, 16)
+
+
+    #---------------------------------------------------------------------------
+    def videoIndex(self):
+
+        """indexes this video in the database."""
+
+
 
 
 if __name__ == "__main__":
