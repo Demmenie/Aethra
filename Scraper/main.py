@@ -1,4 +1,4 @@
-#08/04/2022
+#26/04/2022
 #Chico Demmenie
 #Aethra/Scraper/Main.py
 
@@ -74,9 +74,14 @@ class main:
                 self.videoHash(url)
 
                 #Searching the database to see if this video already exists.
-                mongoServe.entryCheck(url, self.videoHashHex)
+                result = mongoServe.entryCheck(url, self.videoHashHex)
 
-                self.videoIndex()
+                if result != None and result != "preexist":
+                    mongoServe.addToEntry(result, url, )
+
+                elif result == None and result != "preexist":
+
+                    mongoServe.newEntry()
 
 
     #---------------------------------------------------------------------------
@@ -92,6 +97,8 @@ class main:
     def videoIndex(self):
 
         """indexes this video in the database."""
+
+        currentCount = mongoServe.docCount()
 
 
 
