@@ -1,8 +1,9 @@
-#26/04/2022
+#23/07/2022
 #Chico Demmenie
 #Aethra/Scraper/Main.py
 
 import tweepy
+import time
 import json
 import re
 from videohash import VideoHash
@@ -18,10 +19,11 @@ class main:
         """Initialises the core class functions"""
 
         #Making sure the Mongo database works.
-        mongoServe()
+        #mongoServe()
 
-        #Retrieving OAuth Twitter keys.
+        #Retrieving OAuth Twitter keys and lists
         self.keys = json.load(open("../data/keys.json", "r"))
+        self.lists = open("../data/twitterLists.txt").readlines()
 
         #Setting up tweepy api (V1.1)
         auth = tweepy.OAuth1UserHandler(
@@ -41,47 +43,61 @@ class main:
             access_token_secret=self.keys["accessSecret"],
             wait_on_rate_limit=True)
 
-
-        #Launching the video save for twitter
-        self.twitSave()
-
+        self.running = True
+        while self.running:
+            self.twitSave()
+            time.sleep(75)
 
     #---------------------------------------------------------------------------
     def twitSave(self):
 
         """Saves videos from Twitter."""
 
-        #Requesting a list of tweets from twitter.
-        list = self.client.get_list_tweets("1378399759992512516",
-            expansions="attachments.media_keys",
-            max_results=5)
+        for list in self.lists:
 
-        print("List:", list)
+            list = list[:-1]
+            print(f"\n{list}")
 
-        #Iterating through media in the list to find videos.
-        for tweet in list.data:
+            #Requesting a list of tweets from twitter.
+            list = self.client.get_list_tweets(list,
+                expansions="attachments.media_keys",
+                max_results=10)
 
-            #Getting the tweet's media
-            media = self.client.get_tweet(tweet.id,
-                expansions="attachments.media_keys").includes
+            print("list:", list)
 
-            #Finding out if there is a video attached to the tweet
-            if media != {} and media["media"][0].type == "video":
+            #Iterating through media in the list to find videos.
+            for tweet in list.data:
 
-                #Creating a hash of the video.
-                url = f"https://twitter.com/{tweet.author_id}/status/{tweet.id}"
+                #Getting the tweet's media
+                response = self.client.get_tweet(tweet.id,
+                    expansions="attachments.media_keys")
+                media = response.includes
 
-                self.videoHash(url)
+                status = self.api.get_status(tweet.id)
 
-                #Searching the database to see if this video already exists.
-                result = mongoServe.entryCheck(url, self.videoHashHex)
+                #Finding out if there is a video attached to the tweet
+                if media != {} and media["media"][0].type == "video":
 
-                if result != None and result != "preexist":
-                    mongoServe.addToEntry(result, url, )
+                    #Creating a hash of the video.
+                    url = (f"https://twitter.com/{status.author.id}/status/" +
+                        str(tweet.id))
 
-                elif result == None and result != "preexist":
+                    self.videoHash(url)
 
-                    mongoServe.newEntry()
+                    #Searching the database to see if this video already exists.
+                    result = mongoServe().entryCheck(url, self.videoHashHex)
+
+                    #Adding the new tweet to an existing entry
+                    if result != None and result != "preexist":
+                        mongoServe().addToEntry(result, url,
+                        status.created_at.strftime("%H:%M:%S %d-%m-%y"))
+
+                    #Creating a new entry for a new tweet.
+                    elif result == None:
+
+                        mongoServe().newEntry(str(self.videoHashDec),
+                            self.videoHashHex, url,
+                            status.created_at.strftime("%H:%M:%S %d-%m-%y"))
 
 
     #---------------------------------------------------------------------------
@@ -98,9 +114,7 @@ class main:
 
         """indexes this video in the database."""
 
-        currentCount = mongoServe.docCount()
-
-
+        currentCount = mongoServe().docCount()
 
 
 if __name__ == "__main__":
