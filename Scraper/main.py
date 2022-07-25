@@ -79,8 +79,8 @@ class main:
                 if media != {} and media["media"][0].type == "video":
 
                     #Creating a hash of the video.
-                    url = (f"https://twitter.com/{status.author.id}/status/" +
-                        str(tweet.id))
+                    url = (f"https://twitter.com/{status.author.screen_name}"+
+                        f"/status/{tweet.id}")
 
                     self.videoHash(url)
 
