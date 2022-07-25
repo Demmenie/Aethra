@@ -1,4 +1,4 @@
-#23/07/2022
+#25/07/2022
 #Chico Demmenie
 #Aethra/MongoAccess.py
 
@@ -155,13 +155,11 @@ class mongoServe:
 
         print("addToEntry")
 
-        entry = self.video.find({"index": index})
-
-        entry["postList"].append({
-            "url": url,
+        self.video.update_one({"index": index},
+            {"$push": {"postList":
+            {"url": url,
             "timestamp": time.time(),
-            "uploadTime": uTime
-        })
+            "uploadTime": uTime}}})
 
 
 #-------------------------------------------------------------------------------

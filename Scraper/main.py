@@ -1,4 +1,4 @@
-#23/07/2022
+#25/07/2022
 #Chico Demmenie
 #Aethra/Scraper/Main.py
 
