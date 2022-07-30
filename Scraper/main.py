@@ -96,7 +96,7 @@ class main:
                     #Creating a new entry for a new tweet.
                     elif result == None:
 
-                        mongoServe().newEntry(str(self.videoHashDec),
+                        mongoServe().newEntry(self.videoHashDec,
                             self.videoHashHex, url,
                             status.created_at.strftime("%H:%M:%S %d-%m-%y"))
 
