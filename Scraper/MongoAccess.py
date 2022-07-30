@@ -106,17 +106,32 @@ class mongoServe:
 
                 #We check the document above and below to figure out if we need
                 #to go higher or lower.
-                if (floorDoc["hashDec"] < hashDec and
-                    ceilDoc["hashDec"] > hashDec):
+                if floorDoc != None and ceilDoc != None:
+
+                    if (floorDoc["hashDec"] < hashDec and
+                        ceilDoc["hashDec"] > hashDec):
+
+                        index = ceilDoc["index"]
+                        searching = False
+
+                    elif ceilDoc["hashDec"] < hashDec:
+                        halfLength = halfLength + modifyLength
+
+                    elif floorDoc["hashDec"] > hashDec:
+                        halfLength = halfLength - modifyLength
+
+                #If either of the docs are None then we've reached the top or
+                #bottom.
+                elif floorDoc == None and ceilDoc["hashDec"] > hashDec:
 
                     index = ceilDoc["index"]
                     searching = False
 
-                elif ceilDoc["hashDec"] < hashDec:
-                    halfLength = halfLength + modifyLength
+                elif ceilDoc == None and floorDoc["hashDec"] < hashDec:
 
-                elif floorDoc["hashDec"] > hashDec:
-                    halfLength = halfLength - modifyLength
+                    index = floorDoc["index"] + 1
+                    searching = False
+
 
             #Once we've found our index, we need to change the index of every
             #document that's higher.
