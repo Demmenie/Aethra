@@ -106,7 +106,7 @@ class main:
 
         """Hashes videos for storage."""
 
-        self.videoHashHex = VideoHash(url=url).hash_hex
+        self.videoHashHex = videohash.VideoHash(url=url).hash_hex
         self.videoHashDec = int(self.videoHashHex, 16)
 
 
