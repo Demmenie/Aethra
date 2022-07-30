@@ -89,72 +89,59 @@ class mongoServe:
         #Finding the length of the list so far
         length = self.video.count_documents({})
 
-        if length > 1:
+        #Creating a while loop to do binary search on the database.
+        halfLength = length / 2
+        modifyLength = copy.copy(halfLength)
+        searching = True
+        while searching:
 
-            #Creating a while loop to do binary search on the database.
-            halfLength = length / 2
-            modifyLength = copy.copy(halfLength)
-            searching = True
-            while searching:
+            modifyLength = modifyLength / 2
+            halfFloor = math.floor(halfLength)
+            halfCeil = math.ceil(halfLength)
 
-                modifyLength = modifyLength / 2
-                halfFloor = math.floor(halfLength)
-                halfCeil = math.ceil(halfLength)
+            floorDoc = self.video.find_one({"index": halfFloor})
+            ceilDoc = self.video.find_one({"index": halfCeil})
 
-                floorDoc = self.video.find_one({"index": halfFloor})
-                ceilDoc = self.video.find_one({"index": halfCeil})
+            #We check the document above and below to figure out if we need
+            #to go higher or lower.
+            if floorDoc != None and ceilDoc != None:
 
-                #We check the document above and below to figure out if we need
-                #to go higher or lower.
-                if floorDoc != None and ceilDoc != None:
-
-                    if (floorDoc["hashDec"] < hashDec and
-                        ceilDoc["hashDec"] > hashDec):
-
-                        index = ceilDoc["index"]
-                        searching = False
-
-                    elif ceilDoc["hashDec"] < hashDec:
-                        halfLength = halfLength + modifyLength
-
-                    elif floorDoc["hashDec"] > hashDec:
-                        halfLength = halfLength - modifyLength
-
-                #If either of the docs are None then we've reached the top or
-                #bottom.
-                elif floorDoc == None and ceilDoc["hashDec"] > hashDec:
+                if (int(floorDoc["hashDec"]) < hashDec and
+                    int(ceilDoc["hashDec"]) > hashDec):
 
                     index = ceilDoc["index"]
                     searching = False
 
-                elif ceilDoc == None and floorDoc["hashDec"] < hashDec:
+                elif int(ceilDoc["hashDec"]) < hashDec:
+                    halfLength = halfLength + modifyLength
 
-                    index = floorDoc["index"] + 1
-                    searching = False
+                elif int(floorDoc["hashDec"]) > hashDec:
+                    halfLength = halfLength - modifyLength
+
+            #If either of the docs are None then we've reached the top or
+            #bottom.
+        elif floorDoc == None and int(ceilDoc["hashDec"]) > hashDec:
+
+                index = ceilDoc["index"]
+                searching = False
+
+            elif ceilDoc == None and int(floorDoc["hashDec"]) < hashDec:
+
+                index = floorDoc["index"] + 1
+                searching = False
 
 
-            #Once we've found our index, we need to change the index of every
-            #document that's higher.
-            for i in range(length, (index-1), -1):
-                self.video.update_one({"index": i},
-                    {"$set": {"index": i + 1}})
+        #Once we've found our index, we need to change the index of every
+        #document that's higher.
+        for i in range(length, (index-1), -1):
+            self.video.update_one({"index": i},
+                {"$set": {"index": i + 1}})
 
-        else:
-            doc = self.video.find_one({})
-
-            try:
-                if doc["hashDec"] < hashDec:
-                    index = 1
-                else:
-                    index = 0
-
-            except:
-                index = 0
 
         #Setting up the details in the entry.
         dataEntry = {
             "index": index,
-            "hashDec": hashDec,
+            "hashDec": str(hashDec),
             "hashHex": hashHex,
             "timestamp": time.time(),
             "uploadTime": uTime,
