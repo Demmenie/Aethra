@@ -1,6 +1,6 @@
 #25/07/2022
 #Chico Demmenie
-#Aethra/MongoAccess.py
+#Aethra/Scraper/MongoAccess.py
 
 #Importing dependencies
 import pymongo
@@ -91,6 +91,7 @@ class mongoServe:
 
         if length > 1:
 
+            #Creating a while loop to do binary search on the database.
             halfLength = length / 2
             modifyLength = copy.copy(halfLength)
             searching = True
@@ -103,6 +104,8 @@ class mongoServe:
                 floorDoc = self.video.find_one({"index": halfFloor})
                 ceilDoc = self.video.find_one({"index": halfCeil})
 
+                #We check the document above and below to figure out if we need
+                #to go higher or lower.
                 if (floorDoc["hashDec"] < hashDec and
                     ceilDoc["hashDec"] > hashDec):
 
@@ -115,7 +118,8 @@ class mongoServe:
                 elif floorDoc["hashDec"] > hashDec:
                     halfLength = halfLength - modifyLength
 
-
+            #Once we've found our index, we need to change the index of every
+            #document that's higher.
             for i in range(length, (index-1), -1):
                 self.video.update_one({"index": i},
                     {"$set": {"index": i + 1}})
@@ -132,7 +136,7 @@ class mongoServe:
             except:
                 index = 0
 
-        #The id is just the index of this entry.
+        #Setting up the details in the entry.
         dataEntry = {
             "index": index,
             "hashDec": hashDec,
@@ -155,11 +159,16 @@ class mongoServe:
 
         print("addToEntry")
 
-        self.video.update_one({"index": index},
-            {"$push": {"postList":
-            {"url": url,
-            "timestamp": time.time(),
-            "uploadTime": uTime}}})
+        #First we find the entry that needs updating.
+        entry = self.video.find_one({"index": index})
+
+        #Then we update the entry to include the new post.
+        if entry != None:
+            self.video.update_one({"index": index},
+                {"$push": {"postList":
+                {"url": url,
+                "timestamp": time.time(),
+                "uploadTime": uTime}}})
 
 
 #-------------------------------------------------------------------------------

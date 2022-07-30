@@ -6,7 +6,7 @@ import tweepy
 import time
 import json
 import re
-from videohash import VideoHash
+import videohash
 from MongoAccess import mongoServe
 
 
@@ -82,10 +82,10 @@ class main:
                     url = (f"https://twitter.com/{status.author.screen_name}"+
                         f"/status/{tweet.id}")
 
-                    self.videoHash(url)
+                    videohash.videoHash(url)
 
                     #Searching the database to see if this video already exists.
-                    result = mongoServe().entryCheck(url, self.videoHashHex)
+                    result = mongoServe().entryCheck(url,videohash.videoHashHex)
 
                     #Adding the new tweet to an existing entry
                     if result != None and result != "preexist":
@@ -96,7 +96,7 @@ class main:
                     elif result == None:
 
                         mongoServe().newEntry(str(self.videoHashDec),
-                            self.videoHashHex, url,
+                            videohash.videoHashHex, url,
                             status.created_at.strftime("%H:%M:%S %d-%m-%y"))
 
 
@@ -107,14 +107,6 @@ class main:
 
         self.videoHashHex = VideoHash(url=url).hash_hex
         self.videoHashDec = int(self.videoHashHex, 16)
-
-
-    #---------------------------------------------------------------------------
-    def videoIndex(self):
-
-        """indexes this video in the database."""
-
-        currentCount = mongoServe().docCount()
 
 
 if __name__ == "__main__":
