@@ -1,4 +1,4 @@
-#25/07/2022
+#30/07/2022
 #Chico Demmenie
 #Aethra/Scraper/Main.py
 
@@ -69,12 +69,16 @@ class main:
             #Iterating through media in the list to find videos.
             for tweet in list.data:
 
-                #Getting the tweet's media
-                response = self.client.get_tweet(tweet.id,
-                    expansions="attachments.media_keys")
-                media = response.includes
+                try:
+                    #Getting the tweet's media
+                    response = self.client.get_tweet(tweet.id,
+                        expansions="attachments.media_keys")
+                    media = response.includes
 
-                status = self.api.get_status(tweet.id)
+                    status = self.api.get_status(tweet.id)
+
+                except tweepy.errors.NotFound:
+                    continue
 
                 #Finding out if there is a video attached to the tweet
                 if media != {} and media["media"][0].type == "video":

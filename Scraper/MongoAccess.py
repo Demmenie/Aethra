@@ -120,7 +120,7 @@ class mongoServe:
 
             #If either of the docs are None then we've reached the top or
             #bottom.
-        elif floorDoc == None and int(ceilDoc["hashDec"]) > hashDec:
+            elif floorDoc == None and int(ceilDoc["hashDec"]) > hashDec:
 
                 index = ceilDoc["index"]
                 searching = False
