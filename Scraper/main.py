@@ -53,6 +53,7 @@ class main:
 
         """Saves videos from Twitter."""
 
+        #Going through the lists to find new tweets to add to the database.
         for list in self.lists:
 
             list = list[:-1]
@@ -82,10 +83,10 @@ class main:
                     url = (f"https://twitter.com/{status.author.screen_name}"+
                         f"/status/{tweet.id}")
 
-                    videohash.videoHash(url)
+                    self.videoHash(url)
 
                     #Searching the database to see if this video already exists.
-                    result = mongoServe().entryCheck(url,videohash.videoHashHex)
+                    result = mongoServe().entryCheck(url, self.videoHashHex)
 
                     #Adding the new tweet to an existing entry
                     if result != None and result != "preexist":
@@ -96,7 +97,7 @@ class main:
                     elif result == None:
 
                         mongoServe().newEntry(str(self.videoHashDec),
-                            videohash.videoHashHex, url,
+                            self.videoHashHex, url,
                             status.created_at.strftime("%H:%M:%S %d-%m-%y"))
 
 
