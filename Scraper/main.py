@@ -82,6 +82,7 @@ class main:
                         status = self.api.get_status(tweet.id)
 
                         responding = True
+                        err = None
 
                     except tweepy.errors.NotFound as err:
                         print(f"Caught error: {err}")
