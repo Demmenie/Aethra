@@ -69,7 +69,7 @@ class main:
             #Iterating through media in the list to find videos.
             for tweet in list.data:
 
-                err = None
+                self.err = None
                 responding = False
                 while not responding:
 
@@ -82,17 +82,18 @@ class main:
                         status = self.api.get_status(tweet.id)
 
                         responding = True
-                        err = None
+                        self.err = None
 
-                    except tweepy.errors.NotFound as err:
-                        print(f"Caught error: {err}")
+                    except tweepy.errors.NotFound as self.err:
+                        print(f"Caught error: {self.err}")
                         responding = True
 
-                    except tweepy.errors.TwitterServerError as err:
-                        print(f"Caught error: {err}")
+                    except tweepy.errors.TwitterServerError as self.err:
+                        print(f"Caught error: {self.err}")
                         time.sleep(60)
 
-                if err == tweepy.errors.NotFound:
+                if self.err == tweepy.errors.NotFound:
+                    self.err = None
                     continue
 
 
