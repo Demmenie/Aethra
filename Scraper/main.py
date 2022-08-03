@@ -1,4 +1,4 @@
-#31/07/2022
+#03/08/2022
 #Chico Demmenie
 #Aethra/Scraper/Main.py
 
@@ -69,7 +69,7 @@ class main:
             #Iterating through media in the list to find videos.
             for tweet in list.data:
 
-                self.err = None
+                errType = None
                 responding = False
                 while not responding:
 
@@ -82,18 +82,18 @@ class main:
                         status = self.api.get_status(tweet.id)
 
                         responding = True
-                        self.err = None
 
-                    except tweepy.errors.NotFound as self.err:
-                        print(f"Caught error: {self.err}")
+                    except tweepy.errors.NotFound as err:
+                        print(f"Caught error: {err}")
+                        errType = type(err)
                         responding = True
 
-                    except tweepy.errors.TwitterServerError as self.err:
-                        print(f"Caught error: {self.err}")
+                    except tweepy.errors.TwitterServerError as err:
+                        print(f"Caught error: {err}")
+                        print(type(err))
                         time.sleep(60)
 
-                if self.err == tweepy.errors.NotFound:
-                    self.err = None
+                if errType == tweepy.errors.NotFound:
                     continue
 
 
