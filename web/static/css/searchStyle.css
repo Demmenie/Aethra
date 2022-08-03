@@ -20,22 +20,35 @@ body {
 }
 
 #text{
+  position: relative;
+  text-align: center;
   color: #fff;
-  font-size: 60px;
+  font-size: 20px;
+  text-shadow: 1px 1px black, 2px 2px black, 3px 3px black, 4px 4px black;
+  top: 150px;
+}
+
+#icon{
+  padding: 15px;
 }
 
 #centre-box{
   vertical-align: middle;
 }
 
+#tweet-container{
+  padding: 15px;
+}
+
 .tb {
   display: table;
   width: 100%;
+  vertical-align: top;
 }
 
 .td {
   display: table-cell;
-  vertical-align: middle;
+  vertical-align: top;
 }
 
 input,
@@ -52,7 +65,7 @@ button {
   position: absolute;
   top: 0;
   left: 0;
-  right: 1;
+  right: 0;
   width: 1750px;
   padding: 20px;
   background-color: #0a0c10;

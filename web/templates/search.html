@@ -6,19 +6,19 @@
     <title>Aethra</title>
 
     <link rel="stylesheet" href="static/css/searchStyle.css" />
-    <link rel="stylesheet" href="https://pyscript.net/alpha/pyscript.css" />
+    <link rel="stylesheet" href="https://pyscript.net/alpha/pyscript.css"/>
 
   </head>
   <body>
 
-    <div id="centre-box" class="topbar">
+    <div id="centre-box" class="topbar" href="/">
       <div id="icon" class="topbar">
-        <img src="Icon.png" alt="Aethra icon" width="75" height="75"
+        <img src="Icon.png" alt="Aethra icon" width="85" height="85"
         class="topbar">
       </div>
 
       <div id="cover">
-        <form method="post" action="/search">
+        <form method="post" action="/q">
 
           <div class="tb">
             <div class="td">
@@ -41,5 +41,13 @@
 
     </div>
 
+    <div id="tweet-container"></div>
+    <div>
+      <script type="text/javascript" src="widgets.js"></script>
+      <script type="text/javascript" src="organise.js"></script>
+      <script type="text/javascript">
+        organise({{ tweets | tojson }});
+      </script>
+    </div>
   </body>
 </html>

@@ -14,14 +14,25 @@ body {
 }
 
 .centre {
+  position: relative;
   text-align: center;
   margin: auto;
   padding: 5px;
 }
 
-#text{
+#title-text{
   color: #fff;
   font-size: 60px;
+  text-shadow: 1px 1px black, 2px 2px black, 3px 3px black, 4px 4px black,
+    5px 5px black, 6px 6px black;
+}
+
+#text{
+  position: relative;
+  color: #fff;
+  font-size: 20px;
+  text-shadow: 1px 1px black, 2px 2px black, 3px 3px black, 4px 4px black;
+  top: 150px;
 }
 
 #centre-box{
@@ -50,9 +61,9 @@ button {
 
 #cover {
   position: absolute;
-  top: 50%;
-  left: 0;
-  right: 0;
+  top: 110%;
+  left: 0px;
+  right: 0px;
   width: 1200px;
   padding: 20px;
   margin: -83px auto 0 auto;

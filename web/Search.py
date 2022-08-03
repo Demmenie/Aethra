@@ -1,46 +1,110 @@
-#07/06/2022
+#30/07/2022
 #Chico Demmenie
-#Aethra/web/Search.py
+#Aethra/web/search.py
 
-from flask import Flask, render_template, send_file
-from flask import request, redirect, session
+#Importing dependencies
+import pymongo
+from pymongo import MongoClient
+import videohash
+import json
+import copy
+import math
 
-#Defining the flask app
-app = Flask(__name__)
+class DBSearch:
+
+    """This class contains functions that search the database for the website"""
+
+    def __init__(self):
+
+        """Class initialisation and database connection."""
+
+        self.keys = json.loads(open("../data/keys.json", "r").read())
+
+        mongoPass = self.keys["mongoPass"]
+        conn = ''.join(f"mongodb+srv://Aethra:{mongoPass}"+
+            "@cluster0.73j0r0l.mongodb.net/Aethra?retryWrites=true&w=majority")
+
+        #Setting a 5-second connection timeout so that we're not pinging the
+        #server endlessly
+        self.client = pymongo.MongoClient(conn,
+            tls=True,
+            serverSelectionTimeoutMS=5000)
+
+        #Setting the class wide variables that connect to the database and the
+        #MilVec collection.
+        self.db = self.client.Aethra
+        self.video = self.db.video
 
 
-#This returns the main page of the flask app
-@app.route('/')
-def index():
-    return render_template('index.html')
+    #---------------------------------------------------------------------------
+    def standard(self, url):
+
+        """Searches the database in the standard way using binary search."""
+
+        #Hashing the video
+        self.videoHash(url)
+
+        #Finding the length of the list so far
+        length = self.video.count_documents({})
+
+        result = None
+        halfLength = length / 2
+        modifyLength = copy.copy(halfLength)
+        searching = True
+        while searching:
+
+            modifyLength = modifyLength / 2
+            halfFloor = math.floor(halfLength)
+            halfCeil = math.ceil(halfLength)
+
+            floorDoc = self.video.find_one({"index": halfFloor},
+                projection={'_id': False})
+            ceilDoc = self.video.find_one({"index": halfCeil},
+                projection={'_id': False})
+
+            if floorDoc["hashHex"] == self.hashHex:
+                result = copy.copy(floorDoc)
+                searching = False
+
+            elif ceilDoc["hashHex"] == self.hashHex:
+                result = copy.copy(ceilDoc)
+                searching = False
+
+            elif (int(floorDoc["hashDec"]) < self.hashDec and
+                int(ceilDoc["hashDec"]) > self.hashDec):
+
+                index = ceilDoc["index"]
+                searching = False
+
+            elif int(ceilDoc["hashDec"]) < self.hashDec:
+                halfLength = halfLength + modifyLength
+
+            elif int(floorDoc["hashDec"]) > self.hashDec:
+                halfLength = halfLength - modifyLength
+
+        if result != None:
+            returnList = []
+            returnList.append(result)
+            returnList.append(self.video.find_one({"index": (result["index"] + 1)},
+                projection={'_id': False}))
+            returnList.append(self.video.find_one({"index": (result["index"] - 1)},
+                projection={'_id': False}))
+
+            return returnList
+
+        else:
+            return result
 
 
-@app.route('/q', methods=["POST"])
-def sQuery():
+    #---------------------------------------------------------------------------
+    def videoHash(self, url):
 
-    query = request.form['search']
-    return redirect(f'/search?q={query}')
+        """Hashes videos for storage."""
 
-
-@app.route('/search', methods=["GET", "POST"])
-def search():
-
-    query = request.args.get('q')
-    print(query)
-    return render_template('search.html', searchTerm=query)
-
-
-@app.route('/favicon.ico')
-def favicon():
-    favi = 'favicon.ico'
-    return send_file(favi, mimetype='image/gif')
-
-
-@app.route('/Icon.png')
-def icon():
-    icon = 'Icon.png'
-    return send_file(icon, mimetype='image/gif')
+        self.hashHex = videohash.VideoHash(url=url).hash_hex
+        self.hashDec = int(self.hashHex, 16)
 
 
 if __name__ == "__main__":
-    app.run(debug=True)
+
+    print(DBSearch().standard("https://twitter.com/RebeccaRambar/status/1549705390467727361"))
