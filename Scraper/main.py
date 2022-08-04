@@ -46,7 +46,7 @@ class main:
         self.running = True
         while self.running:
             self.twitSave()
-            time.sleep(40)
+            time.sleep(60)
 
     #---------------------------------------------------------------------------
     def twitSave(self):
@@ -59,10 +59,16 @@ class main:
             list = list[:-1]
             print(f"\n{list}")
 
-            #Requesting a list of tweets from twitter.
-            list = self.client.get_list_tweets(list,
-                expansions="attachments.media_keys",
-                max_results=5)
+            while True:
+                try:
+                    #Requesting a list of tweets from twitter.
+                    list = self.client.get_list_tweets(list,
+                        expansions="attachments.media_keys",
+                        max_results=7)
+                    break
+
+                except tweepy.errors.TweepyException:
+                    time.sleep(60)
 
             print("list:", list)
 
