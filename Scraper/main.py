@@ -1,4 +1,4 @@
-#03/08/2022
+#04/08/2022
 #Chico Demmenie
 #Aethra/Scraper/Main.py
 
@@ -46,7 +46,7 @@ class main:
         self.running = True
         while self.running:
             self.twitSave()
-            time.sleep(75)
+            time.sleep(40)
 
     #---------------------------------------------------------------------------
     def twitSave(self):
@@ -62,7 +62,7 @@ class main:
             #Requesting a list of tweets from twitter.
             list = self.client.get_list_tweets(list,
                 expansions="attachments.media_keys",
-                max_results=10)
+                max_results=5)
 
             print("list:", list)
 
@@ -104,7 +104,11 @@ class main:
                     url = (f"https://twitter.com/{status.author.screen_name}"+
                         f"/status/{tweet.id}")
 
-                    self.videoHash(url)
+                    try:
+                        self.videoHash(url)
+
+                    except videohash.exceptions.DownloadFailed:
+                        continue
 
                     #Searching the database to see if this video already exists.
                     result = mongoServe().entryCheck(url, self.videoHashHex)
