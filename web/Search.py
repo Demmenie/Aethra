@@ -146,10 +146,13 @@ class DBSearch:
 
         """Hashes videos for storage."""
 
-        self.hashHex = videohash.VideoHash(url=url).hash_hex
+        self.hashHex = videohash.VideoHash(url=url,
+            ffmpeg_path="//workspace/web/.heroku/python/lib/python3.10/"+
+            "site-packages/ffmpeg").hash_hex
+
         self.hashDec = int(self.hashHex, 16)
 
 
 if __name__ == "__main__":
 
-    print(DBSearch().standard("https://twitter.com/RebeccaRambar/status/1549705390467727361"))
+    print(DBSearch().standard(""))
