@@ -99,6 +99,11 @@ class main:
                         print(type(err))
                         time.sleep(60)
 
+                    except tweepy.errors.TweepyException as err:
+                        print(f"Caught error: {err}")
+                        print(type(err))
+                        time.sleep(60)
+
                 if errType == tweepy.errors.NotFound:
                     continue
 
