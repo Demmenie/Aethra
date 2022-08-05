@@ -4,7 +4,7 @@
 
 from flask import Flask, render_template, send_file
 from flask import request, redirect, session
-from search import DBSearch
+from Search import DBSearch
 import tweepy
 
 #Defining the flask app
@@ -78,4 +78,4 @@ def page_not_found(e):
 
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    app.run(debug=False)
