@@ -18,7 +18,7 @@ class DBSearch:
 
         """Class initialisation and database connection."""
 
-        self.keys = json.loads(open("../../home/apps/data/keys.json",
+        self.keys = json.loads(open("data/keys.json",
             "r").read())
 
         mongoPass = self.keys["mongoPass"]
