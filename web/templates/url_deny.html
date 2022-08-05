@@ -5,17 +5,47 @@
     <meta charset="utf-8">
     <title>Aethra</title>
 
-    <link rel="stylesheet" href="static/css/style.css" />
-    <link rel="stylesheet" href="https://pyscript.net/alpha/pyscript.css" />
+    <link rel="stylesheet" href="static/css/searchStyle.css" />
+    <link rel="stylesheet" href="https://pyscript.net/alpha/pyscript.css"/>
 
   </head>
   <body>
 
-    <div class="centre">
-        <h1 id="title-text">404 Page not found.</h1>
-        <p id="text">Oops! Please try a different page, this one doesn't exist...(It's us not you)</p>
+    <div id="centre-box" class="topbar" href="/">
+      <div id="icon" class="topbar">
+        <img src="Icon.png" alt="Aethra icon" width="85" height="85"
+        class="topbar">
+      </div>
+
+      <h1 id="title-text" class="topbar">
+        Aethra
+      </h1>
+
+      <div id="cover">
+        <form method="post" action="/q">
+
+          <div class="tb">
+            <div class="td">
+              <input name="search" id="search" type="text" placeholder="URL"
+              value="{{ searchTerm }}" required autofocus>
+            </div>
+
+            <div class="td" id="s-cover">
+
+              <button type="submit">
+                <div id="s-circle"></div>
+                <span></span>
+              </button>
+
+            </div>
+          </div>
+
+        </form>
+      </div>
+
     </div>
 
+    <p id="text">Hmmm, either that doesn't look like a URL...or I'm not allowed to see it. 🤔</p>
   </body>
 
   <footer class="footer">
@@ -29,7 +59,6 @@
               <a
                 class="Header-link "
                 href="https://github.com/Demmenie/Aethra"
-                target=”_blank”
                 data-hotkey="g d"
                 aria-label="Homepage "
                 data-turbo="false"
@@ -42,13 +71,13 @@
             </div>
 
             <div id="logo">
-              <a href="https://twitter.com/CDemmenie" target=”_blank”>
+              <a href="https://twitter.com/CDemmenie">
                 <img src="/twitterLogo.png" width="32" height="32"></img>
               </a>
             </div>
 
             <div id="logo">
-              <a href="https://www.buymeacoffee.com/Demmenie" target=”_blank”>
+              <a href="https://www.buymeacoffee.com/Demmenie">
                 <img src="/bmc_icon.png" width="32" height="32"></img>
               </a>
             </div>

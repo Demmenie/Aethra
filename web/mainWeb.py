@@ -21,7 +21,13 @@ def index():
 def sQuery():
 
     query = request.form['search']
-    return redirect(f'/search?q={query}')
+    cleanQuery = DBSearch().cleaning(query)
+
+    if cleanQuery:
+        return redirect(f'/search?q={query}')
+
+    else:
+        return redirect('/url_deny')
 
 #Takes the query and does a search based on it.
 @app.route('/search', methods=["GET", "POST"])
@@ -29,28 +35,36 @@ def search():
 
     query = request.args.get('q')
     response = DBSearch().standard(query)
-    return render_template('search.html', searchTerm=query, tweets=str(response))
+    print(response)
+
+    if response != None:
+        return render_template('search.html', searchTerm=query,
+            tweets=str(response))
+
+    else:
+        return render_template('notFound.html', searchTerm=query)
+
+@app.route('/url_deny')
+def url_deny():
+    return render_template('url_deny.html')
 
 
 @app.route('/favicon.ico')
 def favicon():
-    favi = 'favicon.ico'
+    favi = 'webAssets/favicon.ico'
     return send_file(favi, mimetype='image/gif')
 
 
-@app.route('/Icon.png')
-def icon():
-    icon = 'Icon.png'
+@app.route('/<image>.png')
+def icon(image):
+    icon = f'webAssets/{image}.png'
     return send_file(icon, mimetype='image/gif')
 
 
-@app.route('/<filename>.<extension>')
-def pyscript(filename, extension):
-    if filename == "pyscript":
-        script = f'pyscript/src/pyscript.{extension}'
-        return send_file(script)
+@app.route('/<filename>.js')
+def javascript(filename):
 
-    elif filename in ["organise", "widgets"]:
+    if filename in ["organise", "widgets"]:
         script = f'{filename}.js'
         return send_file(script)
 

@@ -37,63 +37,107 @@ class DBSearch:
 
 
     #---------------------------------------------------------------------------
+    def cleaning(self, query):
+
+        """Cleans up and checks that the query is correct."""
+
+        clean = True
+        if (query.find("https://", 0, 8) != 0 and
+            query.find("http://", 0, 8) != 0):
+
+            clean = False
+            print("http")
+
+        elif query.find(".", 8) < 0 or query.find(".", 8) < 0:
+
+            clean = False
+            print("./")
+
+        else:
+            for char in list(query):
+
+                if char in ["{", "}", "|", "\\", "^", "~", "[", "]", "`"]:
+
+                    print("char")
+                    clean = False
+                    break
+
+        return clean
+
+
+    #---------------------------------------------------------------------------
     def standard(self, url):
 
         """Searches the database in the standard way using binary search."""
 
         #Hashing the video
-        self.videoHash(url)
+        try:
+            self.videoHash(url)
 
-        #Finding the length of the list so far
-        length = self.video.count_documents({})
+        except videohash.exceptions.DownloadFailed:
+            return "Download failed"
 
-        result = None
-        halfLength = length / 2
-        modifyLength = copy.copy(halfLength)
-        searching = True
-        while searching:
+        responding = False
+        while not responding:
+            try:
+                #Finding the length of the list so far
+                length = self.video.count_documents({})
 
-            modifyLength = modifyLength / 2
-            halfFloor = math.floor(halfLength)
-            halfCeil = math.ceil(halfLength)
+                result = None
+                halfLength = length / 2
+                modifyLength = copy.copy(halfLength)
+                searching = True
+                while searching:
 
-            floorDoc = self.video.find_one({"index": halfFloor},
-                projection={'_id': False})
-            ceilDoc = self.video.find_one({"index": halfCeil},
-                projection={'_id': False})
+                    modifyLength = modifyLength / 2
+                    halfFloor = math.floor(halfLength)
+                    halfCeil = math.ceil(halfLength)
 
-            if floorDoc["hashHex"] == self.hashHex:
-                result = copy.copy(floorDoc)
-                searching = False
+                    floorDoc = self.video.find_one({"index": halfFloor},
+                        projection={'_id': False})
+                    ceilDoc = self.video.find_one({"index": halfCeil},
+                        projection={'_id': False})
 
-            elif ceilDoc["hashHex"] == self.hashHex:
-                result = copy.copy(ceilDoc)
-                searching = False
+                    if floorDoc["hashHex"] == self.hashHex:
+                        result = copy.copy(floorDoc)
+                        searching = False
 
-            elif (int(floorDoc["hashDec"]) < self.hashDec and
-                int(ceilDoc["hashDec"]) > self.hashDec):
+                    elif ceilDoc["hashHex"] == self.hashHex:
+                        result = copy.copy(ceilDoc)
+                        searching = False
 
-                index = ceilDoc["index"]
-                searching = False
+                    elif (int(floorDoc["hashDec"]) < self.hashDec and
+                        int(ceilDoc["hashDec"]) > self.hashDec):
 
-            elif int(ceilDoc["hashDec"]) < self.hashDec:
-                halfLength = halfLength + modifyLength
+                        index = ceilDoc["index"]
+                        searching = False
 
-            elif int(floorDoc["hashDec"]) > self.hashDec:
-                halfLength = halfLength - modifyLength
+                    elif int(ceilDoc["hashDec"]) < self.hashDec:
+                        halfLength = halfLength + modifyLength
 
-        if result != None:
-            returnList = []
-            returnList.append(result)
-            returnList.append(self.video.find_one({"index": (result["index"] + 1)},
-                projection={'_id': False}))
-            returnList.append(self.video.find_one({"index": (result["index"] - 1)},
-                projection={'_id': False}))
+                    elif int(floorDoc["hashDec"]) > self.hashDec:
+                        halfLength = halfLength - modifyLength
 
-            return returnList
+                if result != None:
+                    returnList = []
+                    returnList.append(result)
+                    returnList.append(self.video.find_one({"index": (result["index"] + 1)},
+                        projection={'_id': False}))
+                    returnList.append(self.video.find_one({"index": (result["index"] - 1)},
+                        projection={'_id': False}))
 
-        else:
-            return result
+                    return returnList
+
+                else:
+                    return result
+
+                responding = True
+
+            except pymongo.errors.NetworkTimeout:
+                time.sleep(60)
+
+            except pymongo.errors.ServerSelectionTimeoutError:
+                time.sleep(60)
 
 
     #---------------------------------------------------------------------------

@@ -14,9 +14,29 @@ body {
 }
 
 .topbar {
+  display: inline-block;
   align: left;
   margin: left;
   padding: 5px;
+}
+
+.footer {
+    position: fixed;
+    color: #fff;
+    font-size: 20px;
+    text-shadow: 1px 1px black, 2px 2px black, 3px 3px black, 4px 4px black;
+    bottom: -420px;
+    padding: 10px;
+    bottom: 0;
+}
+
+#title-text{
+  position: relative;
+  top: 15px;
+  color: #fff;
+  font-size: 50px;
+  text-shadow: 1px 1px black, 2px 2px black, 3px 3px black, 4px 4px black,
+    5px 5px black, 6px 6px black;
 }
 
 #text{
@@ -38,6 +58,18 @@ body {
 
 #tweet-container{
   padding: 15px;
+}
+
+#copy-text{
+  position: relative;
+  display: inline-block;
+  bottom: 10px;
+}
+
+#logo{
+  position: relative;
+  display: inline-block;
+  left: 5px
 }
 
 .tb {
