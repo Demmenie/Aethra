@@ -146,9 +146,7 @@ class DBSearch:
 
         """Hashes videos for storage."""
 
-        self.hashHex = videohash.VideoHash(url=url,
-            ffmpeg_path="//workspace/web/.heroku/python/lib/python3.10/"+
-            "site-packages/ffmpeg").hash_hex
+        self.hashHex = videohash.VideoHash(url=url).hash_hex
 
         self.hashDec = int(self.hashHex, 16)
 
