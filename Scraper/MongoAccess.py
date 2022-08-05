@@ -1,4 +1,4 @@
-#31/07/2022
+#04/08/2022
 #Chico Demmenie
 #Aethra/Scraper/MongoAccess.py
 
@@ -46,34 +46,45 @@ class mongoServe:
 
         print("entryCheck")
 
-        #Searching to see if the url turns up in the database
-        searchValue = {"url": url}
-        response = self.video.find(searchValue)
+        responding = False
+        while not responding:
+            try:
+                #Searching to see if the url turns up in the database
+                searchValue = {"url": url}
+                response = self.video.find(searchValue)
 
-        #Looking through to confirm if that url is in the response
-        result = None
-        for entry in response:
+                #Looking through to confirm if that url is in the response
+                result = None
+                for entry in response:
 
-            if entry["url"] == url:
-                result = "preexist"
-
-            else:
-                for post in entry["postList"]:
-
-                    if post["url"] == url:
+                    if entry["url"] == url:
                         result = "preexist"
 
-        #If the url doesn't turn up then we can look to see if the video itself
-        #has been seen before
-        if result == None:
+                    else:
+                        for post in entry["postList"]:
 
-            searchValue = {"hashHex": hashHex}
-            response = self.video.find(searchValue)
+                            if post["url"] == url:
+                                result = "preexist"
 
-            for entry in response:
+                #If the url doesn't turn up then we can look to see if the video itself
+                #has been seen before
+                if result == None:
 
-                if entry["hashHex"] == hashHex:
-                    result = entry["index"]
+                    searchValue = {"hashHex": hashHex}
+                    response = self.video.find(searchValue)
+
+                    for entry in response:
+
+                        if entry["hashHex"] == hashHex:
+                            result = entry["index"]
+
+                responding = True
+
+            except pymongo.errors.NetworkTimeout:
+                time.sleep(60)
+
+            except pymongo.errors.ServerSelectionTimeoutError:
+                time.sleep(60)
 
         #Returning what we've found
         return result
@@ -86,72 +97,85 @@ class mongoServe:
 
         print("newEntry")
 
-        #Finding the length of the list so far
-        length = self.video.count_documents({})
+        responding = False
+        while not responding:
+            try:
+                #Finding the length of the list so far
+                length = self.video.count_documents({})
 
-        #Creating a while loop to do binary search on the database.
-        halfLength = length / 2
-        modifyLength = copy.copy(halfLength)
-        searching = True
-        while searching:
+                #Creating a while loop to do binary search on the database.
+                halfLength = length / 2
+                modifyLength = copy.copy(halfLength)
+                searching = True
+                while searching:
 
-            modifyLength = modifyLength / 2
-            halfFloor = math.floor(halfLength)
-            halfCeil = math.ceil(halfLength)
+                    modifyLength = modifyLength / 2
+                    halfFloor = math.floor(halfLength)
+                    halfCeil = math.ceil(halfLength)
 
-            floorDoc = self.video.find_one({"index": halfFloor})
-            ceilDoc = self.video.find_one({"index": halfCeil})
+                    floorDoc = self.video.find_one({"index": halfFloor})
+                    ceilDoc = self.video.find_one({"index": halfCeil})
 
-            #We check the document above and below to figure out if we need
-            #to go higher or lower.
-            if floorDoc != None and ceilDoc != None:
+                    #We check the document above and below to figure out if we need
+                    #to go higher or lower.
+                    if floorDoc != None and ceilDoc != None:
 
-                if (int(floorDoc["hashDec"]) < hashDec and
-                    int(ceilDoc["hashDec"]) > hashDec):
+                        if (int(floorDoc["hashDec"]) < hashDec and
+                            int(ceilDoc["hashDec"]) > hashDec):
 
-                    index = ceilDoc["index"]
-                    searching = False
+                            index = ceilDoc["index"]
+                            searching = False
 
-                elif int(ceilDoc["hashDec"]) < hashDec:
-                    halfLength = halfLength + modifyLength
+                        elif int(ceilDoc["hashDec"]) < hashDec:
+                            halfLength = halfLength + modifyLength
 
-                elif int(floorDoc["hashDec"]) > hashDec:
-                    halfLength = halfLength - modifyLength
+                        elif int(floorDoc["hashDec"]) > hashDec:
+                            halfLength = halfLength - modifyLength
 
-            #If either of the docs are None then we've reached the top or
-            #bottom.
-            elif floorDoc == None and int(ceilDoc["hashDec"]) > hashDec:
+                    #If either of the docs are None then we've reached the top or
+                    #bottom.
+                    elif floorDoc == None and int(ceilDoc["hashDec"]) > hashDec:
 
-                index = ceilDoc["index"]
-                searching = False
+                        index = ceilDoc["index"]
+                        searching = False
 
-            elif ceilDoc == None and int(floorDoc["hashDec"]) < hashDec:
+                    elif ceilDoc == None and int(floorDoc["hashDec"]) < hashDec:
 
-                index = floorDoc["index"] + 1
-                searching = False
-
-
-        #Once we've found our index, we need to change the index of every
-        #document that's higher.
-        for i in range(length, (index-1), -1):
-            self.video.update_one({"index": i},
-                {"$set": {"index": i + 1}})
+                        index = floorDoc["index"] + 1
+                        searching = False
 
 
-        #Setting up the details in the entry.
-        dataEntry = {
-            "index": index,
-            "hashDec": str(hashDec),
-            "hashHex": hashHex,
-            "timestamp": time.time(),
-            "uploadTime": uTime,
-            "url": url,
-            "postList": []
-        }
+                #Once we've found our index, we need to change the index of every
+                #document that's higher.
+                for i in range(length, (index-1), -1):
+                    self.video.update_one({"index": i},
+                        {"$set": {"index": i + 1}})
 
-        print(dataEntry)
 
-        self.video.insert_one(dataEntry)
+                #Setting up the details in the entry.
+                dataEntry = {
+                    "index": index,
+                    "hashDec": str(hashDec),
+                    "hashHex": hashHex,
+                    "timestamp": time.time(),
+                    "uploadTime": uTime,
+                    "url": url,
+                    "postList": []
+                }
+
+                print(dataEntry)
+
+                self.video.insert_one(dataEntry)
+
+                responding = True
+
+            except pymongo.errors.NetworkTimeout:
+                time.sleep(60)
+
+            except pymongo.errors.ServerSelectionTimeoutError:
+                time.sleep(60)
+
+
 
 
     #---------------------------------------------------------------------------
@@ -161,16 +185,27 @@ class mongoServe:
 
         print("addToEntry")
 
-        #First we find the entry that needs updating.
-        entry = self.video.find_one({"index": index})
+        responding = False
+        while not responding:
+            try:
+                #First we find the entry that needs updating.
+                entry = self.video.find_one({"index": index})
 
-        #Then we update the entry to include the new post.
-        if entry != None:
-            self.video.update_one({"index": index},
-                {"$push": {"postList":
-                {"url": url,
-                "timestamp": time.time(),
-                "uploadTime": uTime}}})
+                #Then we update the entry to include the new post.
+                if entry != None:
+                    self.video.update_one({"index": index},
+                        {"$push": {"postList":
+                        {"url": url,
+                        "timestamp": time.time(),
+                        "uploadTime": uTime}}})
+
+                responding = True
+
+            except pymongo.errors.NetworkTimeout:
+                time.sleep(60)
+
+            except pymongo.errors.ServerSelectionTimeoutError:
+                time.sleep(60)
 
 
 #-------------------------------------------------------------------------------

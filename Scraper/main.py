@@ -46,7 +46,7 @@ class main:
         self.running = True
         while self.running:
             self.twitSave()
-            time.sleep(60)
+            time.sleep(75)
 
     #---------------------------------------------------------------------------
     def twitSave(self):
@@ -64,77 +64,79 @@ class main:
                     #Requesting a list of tweets from twitter.
                     list = self.client.get_list_tweets(list,
                         expansions="attachments.media_keys",
-                        max_results=7)
+                        max_results=10)
                     break
 
                 except tweepy.errors.TweepyException:
-                    time.sleep(60)
+                    time.sleep(75)
 
             print("list:", list)
 
-            #Iterating through media in the list to find videos.
-            for tweet in list.data:
+            if list.meta["result_count"] != 0:
+                #Iterating through media in the list to find videos.
+                for tweet in list.data:
 
-                errType = None
-                responding = False
-                while not responding:
+                    errType = None
+                    responding = False
+                    while not responding:
 
-                    try:
-                        #Getting the tweet's media
-                        response = self.client.get_tweet(tweet.id,
-                            expansions="attachments.media_keys")
-                        media = response.includes
+                        try:
+                            #Getting the tweet's media
+                            response = self.client.get_tweet(tweet.id,
+                                expansions="attachments.media_keys")
+                            media = response.includes
 
-                        status = self.api.get_status(tweet.id)
+                            status = self.api.get_status(tweet.id)
 
-                        responding = True
+                            responding = True
 
-                    except tweepy.errors.NotFound as err:
-                        print(f"Caught error: {err}")
-                        errType = type(err)
-                        responding = True
+                        except tweepy.errors.NotFound as err:
+                            print(f"Caught error: {err}")
+                            errType = type(err)
+                            responding = True
 
-                    except tweepy.errors.TwitterServerError as err:
-                        print(f"Caught error: {err}")
-                        print(type(err))
-                        time.sleep(60)
+                        except tweepy.errors.TwitterServerError as err:
+                            print(f"Caught error: {err}")
+                            print(type(err))
+                            time.sleep(60)
 
-                    except tweepy.errors.TweepyException as err:
-                        print(f"Caught error: {err}")
-                        print(type(err))
-                        time.sleep(60)
+                        except tweepy.errors.TweepyException as err:
+                            print(f"Caught error: {err}")
+                            print(type(err))
+                            time.sleep(60)
 
-                if errType == tweepy.errors.NotFound:
-                    continue
-
-
-                #Finding out if there is a video attached to the tweet
-                if media != {} and media["media"][0].type == "video":
-
-                    #Creating a hash of the video.
-                    url = (f"https://twitter.com/{status.author.screen_name}"+
-                        f"/status/{tweet.id}")
-
-                    try:
-                        self.videoHash(url)
-
-                    except videohash.exceptions.DownloadFailed:
+                    if errType == tweepy.errors.NotFound:
                         continue
 
-                    #Searching the database to see if this video already exists.
-                    result = mongoServe().entryCheck(url, self.videoHashHex)
 
-                    #Adding the new tweet to an existing entry
-                    if result != None and result != "preexist":
-                        mongoServe().addToEntry(result, url,
-                        status.created_at.strftime("%H:%M:%S %d-%m-%y"))
+                    #Finding out if there is a video attached to the tweet
+                    if media != {} and media["media"][0].type == "video":
 
-                    #Creating a new entry for a new tweet.
-                    elif result == None:
+                        #Creating a hash of the video.
+                        url = (f"https://twitter.com/"
+                            f"{status.author.screen_name}/status/{tweet.id}")
 
-                        mongoServe().newEntry(self.videoHashDec,
-                            self.videoHashHex, url,
+                        try:
+                            self.videoHash(url)
+
+                        except videohash.exceptions.DownloadFailed:
+                            continue
+
+                        #Searching the database to see if this video already
+                        #exists.
+                        result = mongoServe().entryCheck(url, self.videoHashHex)
+
+                        #Adding the new tweet to an existing entry
+                        if result != None and result != "preexist":
+                            mongoServe().addToEntry(result, url,
                             status.created_at.strftime("%H:%M:%S %d-%m-%y"))
+
+                        #Creating a new entry for a new tweet.
+                        elif result == None:
+
+                            mongoServe().newEntry(self.videoHashDec,
+                                self.videoHashHex, url,
+                                status.created_at.strftime("%H:%M:%S %d-%m-%y"))
 
 
     #---------------------------------------------------------------------------
