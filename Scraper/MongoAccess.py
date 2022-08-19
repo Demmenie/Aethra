@@ -23,8 +23,10 @@ class mongoServe:
         keys = json.loads(open("../data/keys.json", "r").read())
 
         mongoPass = keys["mongoPass"]
-        conn = ''.join(f"mongodb+srv://Aethra:{mongoPass}"+
-            "@cluster0.73j0r0l.mongodb.net/Aethra?retryWrites=true&w=majority")
+        mongoCluster = keys["mongoCluster"]
+        mongoAccount = keys["mongoAccount"]
+        conn = ''.join(f"mongodb+srv://{mongoAccount}:{mongoPass}"+
+            f"{mongoCluster}.mongodb.net/{mongoAccount}?retryWrites=true&w=majority")
 
         #Setting a 5-second connection timeout so that we're not pinging the
         #server endlessly
