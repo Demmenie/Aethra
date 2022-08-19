@@ -70,8 +70,7 @@ class main:
                 except tweepy.errors.TweepyException:
                     time.sleep(75)
 
-            print(f"Data: {list.data}, includes: {list.includes},",
-                f"errors: {list.errors}, meta: {list.meta}")
+            print("list:", list.encode(encoding='utf-8'))
 
 
             if list.meta["result_count"] != 0:
