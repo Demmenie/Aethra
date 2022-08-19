@@ -70,7 +70,7 @@ class main:
                 except tweepy.errors.TweepyException:
                     time.sleep(75)
 
-            print("list:", str(list))
+            print("list:", list.encode("UTF-8"))
 
             if list.meta["result_count"] != 0:
                 #Iterating through media in the list to find videos.
