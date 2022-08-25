@@ -123,6 +123,9 @@ class main:
                         except videohash.exceptions.DownloadFailed:
                             continue
 
+                        except videohash.exceptions.FFmpegFailedToExtractFrames:
+                            continue
+
                         #Searching the database to see if this video already
                         #exists.
                         result = mongoServe().entryCheck(url, self.videoHashHex)
@@ -147,6 +150,7 @@ class main:
 
         self.videoHashHex = videohash.VideoHash(url=url).hash_hex
         self.videoHashDec = int(self.videoHashHex, 16)
+
 
 
 if __name__ == "__main__":
