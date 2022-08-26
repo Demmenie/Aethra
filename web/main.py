@@ -4,7 +4,7 @@
 
 from flask import Flask, render_template, send_file
 from flask import request, redirect, session
-from Search import DBSearch
+from search import DBSearch
 import tweepy
 
 #Defining the flask app
