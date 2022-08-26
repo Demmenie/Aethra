@@ -65,7 +65,7 @@ def icon(image):
 def javascript(filename):
 
     if filename in ["organise", "widgets"]:
-        script = f'{filename}.js'
+        script = f'static/{filename}.js'
         return send_file(script)
 
     else:
