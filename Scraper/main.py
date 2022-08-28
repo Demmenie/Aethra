@@ -4,6 +4,7 @@
 
 import tweepy
 import time
+import datetime
 import json
 import re
 import videohash
@@ -57,7 +58,7 @@ class main:
         for list in self.lists:
 
             list = list[:-1]
-            print(f"\n{list}")
+            print(f"\n[{datetime.datetime.now()}] {list}")
 
             while True:
                 try:
@@ -70,7 +71,8 @@ class main:
                 except tweepy.errors.TweepyException:
                     time.sleep(75)
 
-            print("list:", str(list).encode('utf-8'))
+            print(f"[{datetime.datetime.now()}] list:",
+                str(list).encode('utf-8'))
 
 
             if list.meta["result_count"] != 0:
@@ -92,17 +94,20 @@ class main:
                             responding = True
 
                         except tweepy.errors.NotFound as err:
-                            print(f"Caught error: {err}")
+                            print(f"[{datetime.datetime.now()}] Caught error:",
+                                f"{err}")
                             errType = type(err)
                             responding = True
 
                         except tweepy.errors.TwitterServerError as err:
-                            print(f"Caught error: {err}")
+                            print(f"[{datetime.datetime.now()}] Caught error:",
+                                f"{err}")
                             print(type(err))
                             time.sleep(60)
 
                         except tweepy.errors.TweepyException as err:
-                            print(f"Caught error: {err}")
+                            print(f"[{datetime.datetime.now()}] Caught error:",
+                                f"{err}, sleeping 60 secs")
                             print(type(err))
                             time.sleep(60)
 

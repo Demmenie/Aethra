@@ -8,6 +8,7 @@ from pymongo import MongoClient
 import sys
 import json
 import time
+import datetime
 import copy
 import math
 
@@ -46,7 +47,7 @@ class mongoServe:
 
         """Checks any entry against the database to see if the entry exists."""
 
-        print("entryCheck")
+        print(f"[{datetime.datetime.now()}] entryCheck()")
 
         responding = False
         while not responding:
@@ -68,8 +69,8 @@ class mongoServe:
                             if post["url"] == url:
                                 result = "preexist"
 
-                #If the url doesn't turn up then we can look to see if the video itself
-                #has been seen before
+                #If the url doesn't turn up then we can look to see if the video
+                #itself has been seen before
                 if result == None:
 
                     searchValue = {"hashHex": hashHex}
@@ -103,7 +104,7 @@ class mongoServe:
 
         """Creates a new video entry."""
 
-        print("newEntry")
+        print(f"[{datetime.datetime.now()}] newEntry()")
 
         responding = False
         while not responding:
@@ -171,7 +172,7 @@ class mongoServe:
                     "postList": []
                 }
 
-                print(dataEntry)
+                print(f"[{datetime.datetime.now()}]", dataEntry)
 
                 self.video.insert_one(dataEntry)
 
@@ -191,7 +192,7 @@ class mongoServe:
 
         """Adds and extra post to an existing entry."""
 
-        print("addToEntry")
+        print(f"[{datetime.datetime.now()}] addToEntry()")
 
         responding = False
         while not responding:
