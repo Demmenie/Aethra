@@ -169,7 +169,10 @@ class mongoServe:
                     "timestamp": time.time(),
                     "uploadTime": uTime,
                     "url": url,
-                    "postList": []
+                    "postList": [{"url": url,
+                    "timestamp": time.time(),
+                    "uploadTime": uTime
+                    }]
                 }
 
                 print(f"[{datetime.datetime.now()}]", dataEntry)
