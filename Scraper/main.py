@@ -112,9 +112,7 @@ class main:
                             print(type(err))
                             time.sleep(60)
 
-                    if errType == tweepy.errors.NotFound as err:
-                        print(f"[{datetime.datetime.now()}] Caught: {err},",
-                            "continuing.")
+                    if errType == tweepy.errors.NotFound:
                         continue
 
 
@@ -133,8 +131,7 @@ class main:
                                 " continuing.")
                             continue
 
-                        except (videohash.exceptions.FFmpegFailedToExtractFrames
-                            as err):
+                        except videohash.exceptions.FFmpegFailedToExtractFrames as err:
 
                             print(f"[{datetime.datetime.now()}] Caught: {err},",
                                 "continuing.")
