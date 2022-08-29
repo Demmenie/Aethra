@@ -102,7 +102,7 @@ class main:
 
                         except tweepy.errors.TwitterServerError as err:
                             print(f"[{datetime.datetime.now()}] Caught error:",
-                                f"{err}")
+                                f"{err}, sleeping 60 secs")
                             print(type(err))
                             time.sleep(60)
 
@@ -112,7 +112,9 @@ class main:
                             print(type(err))
                             time.sleep(60)
 
-                    if errType == tweepy.errors.NotFound:
+                    if errType == tweepy.errors.NotFound as err:
+                        print(f"[{datetime.datetime.now()}] Caught: {err},",
+                            "continuing.")
                         continue
 
 
@@ -126,10 +128,16 @@ class main:
                         try:
                             self.videoHash(url)
 
-                        except videohash.exceptions.DownloadFailed:
+                        except videohash.exceptions.DownloadFailed as err:
+                            print(f"[{datetime.datetime.now()}] Caught: {err},",
+                                " continuing.")
                             continue
 
-                        except videohash.exceptions.FFmpegFailedToExtractFrames:
+                        except (videohash.exceptions.FFmpegFailedToExtractFrames
+                            as err):
+
+                            print(f"[{datetime.datetime.now()}] Caught: {err},",
+                                "continuing.")
                             continue
 
                         #Searching the database to see if this video already
@@ -159,7 +167,6 @@ class main:
         self.videoHashDec = int(self.videoHashHex, 16)
 
         videoPath = vHash.storage_path
-        print(videoPath)
         cutPath = videoPath[:videoPath.find("temp_storage_dir")]
 
         shutil.rmtree(cutPath)

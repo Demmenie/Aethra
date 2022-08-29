@@ -1,4 +1,4 @@
-#04/08/2022
+#29/08/2022
 #Chico Demmenie
 #Aethra/Scraper/MongoAccess.py
 
@@ -27,7 +27,8 @@ class mongoServe:
         mongoCluster = keys["mongoCluster"]
         mongoAccount = keys["mongoAccount"]
         conn = ''.join(f"mongodb+srv://{mongoAccount}:{mongoPass}"+
-            f"{mongoCluster}.mongodb.net/{mongoAccount}?retryWrites=true&w=majority")
+            f"{mongoCluster}.mongodb.net/{mongoAccount}"+
+            "?retryWrites=true&w=majority")
 
         #Setting a 5-second connection timeout so that we're not pinging the
         #server endlessly
@@ -89,13 +90,16 @@ class mongoServe:
 
                 responding = True
 
-            except pymongo.errors.NetworkTimeout:
+            except pymongo.errors.NetworkTimeout as err:
+                print(f"[{datetime.datetime.now()}] Caught: {err}, sleeping 60")
                 time.sleep(60)
 
-            except pymongo.errors.ServerSelectionTimeoutError:
+            except pymongo.errors.ServerSelectionTimeoutError as err:
+                print(f"[{datetime.datetime.now()}] Caught: {err}, sleeping 60")
                 time.sleep(60)
 
         #Returning what we've found
+        print(f"[{datetime.datetime.now()}] {result}")
         return result
 
 
@@ -125,8 +129,8 @@ class mongoServe:
                     floorDoc = self.video.find_one({"index": halfFloor})
                     ceilDoc = self.video.find_one({"index": halfCeil})
 
-                    #We check the document above and below to figure out if we need
-                    #to go higher or lower.
+                    #We check the document above and below to figure out if we
+                    #need to go higher or lower.
                     if floorDoc != None and ceilDoc != None:
 
                         if (int(floorDoc["hashDec"]) < hashDec and
@@ -141,8 +145,8 @@ class mongoServe:
                         elif int(floorDoc["hashDec"]) > hashDec:
                             halfLength = halfLength - modifyLength
 
-                    #If either of the docs are None then we've reached the top or
-                    #bottom.
+                    #If either of the docs are None then we've reached the top
+                    #or bottom.
                     elif floorDoc == None and int(ceilDoc["hashDec"]) > hashDec:
 
                         index = ceilDoc["index"]
@@ -154,8 +158,8 @@ class mongoServe:
                         searching = False
 
 
-                #Once we've found our index, we need to change the index of every
-                #document that's higher.
+                #Once we've found our index, we need to change the index of
+                #every document that's higher.
                 for i in range(length, (index-1), -1):
                     self.video.update_one({"index": i},
                         {"$set": {"index": i + 1}})
@@ -175,16 +179,17 @@ class mongoServe:
                     }]
                 }
 
-                print(f"[{datetime.datetime.now()}]", dataEntry)
-
                 self.video.insert_one(dataEntry)
+                print(f"[{datetime.datetime.now()}]", dataEntry)
 
                 responding = True
 
-            except pymongo.errors.NetworkTimeout:
+            except pymongo.errors.NetworkTimeout as err:
+                print(f"[{datetime.datetime.now()}] Caught: {err}, sleeping 60")
                 time.sleep(60)
 
-            except pymongo.errors.ServerSelectionTimeoutError:
+            except pymongo.errors.ServerSelectionTimeoutError as err:
+                print(f"[{datetime.datetime.now()}] Caught: {err}, sleeping 60")
                 time.sleep(60)
 
 
@@ -211,12 +216,16 @@ class mongoServe:
                         "timestamp": time.time(),
                         "uploadTime": uTime}}})
 
+                    print(f"[{datetime.datetime.now()}], Updated: {entry}")
+
                 responding = True
 
-            except pymongo.errors.NetworkTimeout:
+            except pymongo.errors.NetworkTimeout as err:
+                print(f"[{datetime.datetime.now()}] Caught: {err}, sleeping 60")
                 time.sleep(60)
 
-            except pymongo.errors.ServerSelectionTimeoutError:
+            except pymongo.errors.ServerSelectionTimeoutError as err:
+                print(f"[{datetime.datetime.now()}] Caught: {err}, sleeping 60")
                 time.sleep(60)
 
 
