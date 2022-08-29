@@ -1,4 +1,4 @@
-#04/08/2022
+#29/08/2022
 #Chico Demmenie
 #Aethra/Scraper/Main.py
 
@@ -7,6 +7,7 @@ import time
 import datetime
 import json
 import re
+import shutil
 import videohash
 from MongoAccess import mongoServe
 
@@ -153,9 +154,15 @@ class main:
 
         """Hashes videos for storage."""
 
-        self.videoHashHex = videohash.VideoHash(url=url).hash_hex
+        vHash = videohash.VideoHash(url=url)
+        self.videoHashHex = vHash.hash_hex
         self.videoHashDec = int(self.videoHashHex, 16)
 
+        videoPath = vHash.storage_path
+        print(videoPath)
+        cutPath = videoPath[:videoPath.find("temp_storage_dir")]
+
+        shutil.rmtree(cutPath)
 
 
 if __name__ == "__main__":
