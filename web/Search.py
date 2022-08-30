@@ -6,6 +6,7 @@
 import pymongo
 from pymongo import MongoClient
 import videohash
+import shutil
 import json
 import copy
 import math
@@ -19,12 +20,14 @@ class DBSearch:
 
         """Class initialisation and database connection."""
 
-        self.keys = json.loads(open("data/keys.json",
+        keys = json.loads(open("data/keys.json",
             "r").read())
 
-        mongoPass = self.keys["mongoPass"]
-        conn = ''.join(f"mongodb+srv://Aethra:{mongoPass}"+
-            "@cluster0.73j0r0l.mongodb.net/Aethra?retryWrites=true&w=majority")
+        mongoPass = keys["mongoPass"]
+        mongoCluster = keys["mongoCluster"]
+        mongoAccount = keys["mongoAccount"]
+        conn = ''.join(f"mongodb+srv://{mongoAccount}:{mongoPass}"+
+            f"{mongoCluster}.mongodb.net/{mongoAccount}?retryWrites=true&w=majority")
 
         #Setting a 5-second connection timeout so that we're not pinging the
         #server endlessly
@@ -147,9 +150,14 @@ class DBSearch:
 
         """Hashes videos for storage."""
 
-        self.hashHex = videohash.VideoHash(url=url).hash_hex
-
+        vHash = videohash.VideoHash(url=url)
+        self.hashHex = vHash.hash_hex
         self.hashDec = int(self.hashHex, 16)
+
+        videoPath = vHash.storage_path
+        cutPath = videoPath[:videoPath.find("temp_storage_dir")]
+
+        shutil.rmtree(cutPath)
 
 
 if __name__ == "__main__":
