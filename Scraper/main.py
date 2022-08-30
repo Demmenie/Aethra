@@ -48,6 +48,7 @@ class main:
         self.running = True
         while self.running:
             self.twitSave()
+            print(f"[{datetime.datetime.now()}] Sleeping 60 secs")
             time.sleep(75)
 
     #---------------------------------------------------------------------------
