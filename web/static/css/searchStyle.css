@@ -13,6 +13,29 @@ body {
   background-color: #272b33;
 }
 
+/* width */
+::-webkit-scrollbar {
+  width: 8px;
+  border-radius: 20px;
+}
+
+/* Track */
+::-webkit-scrollbar-track {
+  background: #0a0c10;
+  border-radius: 20px;
+}
+
+/* Handle */
+::-webkit-scrollbar-thumb {
+  background: #7a828e;
+  border-radius: 10px;
+}
+
+/* Handle on hover */
+::-webkit-scrollbar-thumb:hover {
+  background: #525964;
+}
+
 .topbar {
   display: inline-block;
   align: left;
@@ -20,12 +43,34 @@ body {
   padding: 5px;
 }
 
+div.video {
+  background-color: #0a0c10;
+  overflow: auto;
+  white-space: nowrap;
+  border-radius: 20px;
+  padding: 20px;
+  padding-bottom: 5px;
+}
+
+div.video span{
+  display: inline-block;
+  overflow-y: scroll;
+  height: 550px;
+  padding: 5px;
+  padding-right: 5px;
+  text-decoration: none;
+}
+
+.twitter-tweet {
+  width: 400px !important;
+}
+
 .footer {
-    position: fixed;
+    position: static;
     color: #fff;
     font-size: 20px;
     text-shadow: 1px 1px black, 2px 2px black, 3px 3px black, 4px 4px black;
-    bottom: -420px;
+    bottom: -500px;
     padding: 10px;
     bottom: 0;
 }
@@ -37,6 +82,7 @@ body {
   font-size: 50px;
   text-shadow: 1px 1px black, 2px 2px black, 3px 3px black, 4px 4px black,
     5px 5px black, 6px 6px black;
+
 }
 
 #text{
@@ -69,7 +115,8 @@ body {
 #logo{
   position: relative;
   display: inline-block;
-  left: 5px
+  left: 3px;
+  padding: 5px;
 }
 
 .tb {

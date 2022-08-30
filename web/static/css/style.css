@@ -13,6 +13,26 @@ body {
   background-color: #272b33;
 }
 
+/* width */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+/* Track */
+::-webkit-scrollbar-track {
+  background: #f1f1f1;
+}
+
+/* Handle */
+::-webkit-scrollbar-thumb {
+  background: #888;
+}
+
+/* Handle on hover */
+::-webkit-scrollbar-thumb:hover {
+  background: #555;
+}
+
 .centre {
   position: relative;
   text-align: center;
@@ -30,11 +50,16 @@ body {
     bottom: 0;
 }
 
+#icon {
+  width: 290px;
+}
+
 #title-text{
   color: #fff;
   font-size: 80px;
   text-shadow: 1px 1px black, 2px 2px black, 3px 3px black, 4px 4px black,
     5px 5px black, 6px 6px black;
+
 }
 
 #text{
@@ -58,7 +83,8 @@ body {
 #logo{
   position: relative;
   display: inline-block;
-  left: 5px
+  left: 3px;
+  padding: 5px;
 }
 
 .tb {
