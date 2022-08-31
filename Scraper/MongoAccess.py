@@ -170,9 +170,6 @@ class mongoServe:
                     "index": index,
                     "hashDec": str(hashDec),
                     "hashHex": hashHex,
-                    "timestamp": time.time(),
-                    "uploadTime": uTime,
-                    "url": url,
                     "postList": [{"url": url,
                     "timestamp": time.time(),
                     "uploadTime": uTime
