@@ -68,17 +68,17 @@ class mongoServe:
                 self.valuesList = []
                 result = None
 
-                addToVList(response)
+                addToVList(self, response)
 
-                searchValue = {"index": (entry["index"] + 1)}
-                response = self.video.find(searchValue)
+                for entry in self.valuesList:
+                    searchValue = {"index": (entry["index"] + 1)}
+                    response1 = self.video.find(searchValue)
 
-                addToVList(response)
+                    searchValue = {"index": (entry["index"] - 1)}
+                    response2 = self.video.find(searchValue)
 
-                searchValue = {"index": (entry["index"] - 1)}
-                response = self.video.find(searchValue)
-
-                addToVList(response)
+                    addToVList(self, response1)
+                    addToVList(self, response2)
 
 
                 for entry in self.valuesList:
