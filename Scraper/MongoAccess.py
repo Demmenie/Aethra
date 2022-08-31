@@ -1,4 +1,4 @@
-#29/08/2022
+#31/08/2022
 #Chico Demmenie
 #Aethra/Scraper/MongoAccess.py
 
@@ -50,43 +50,47 @@ class mongoServe:
 
         print(f"[{datetime.datetime.now()}] entryCheck()")
 
+        def addToVList(self, response):
+
+            """Adds responses to self.valuesList"""
+
+            for entry in response:
+
+                self.valuesList.append(entry)
+
+
         responding = False
         while not responding:
             try:
-                #Searching to see if the url turns up in the database
-                searchValue = {"url": url}
+
+                searchValue = {"hashHex": hashHex}
+                response = self.video.find(searchValue)
+                self.valuesList = []
+                result = None
+
+                addToVList(response)
+
+                searchValue = {"index": (entry["index"] + 1)}
                 response = self.video.find(searchValue)
 
-                #Looking through to confirm if that url is in the response
-                result = None
-                for entry in response:
+                addToVList(response)
 
-                    if entry["url"] == url:
-                        result = "preexist"
+                searchValue = {"index": (entry["index"] - 1)}
+                response = self.video.find(searchValue)
+
+                addToVList(response)
+
+
+                for entry in self.valuesList:
+
+                    if entry["hashHex"] == hashHex:
+                        result = entry["index"]
 
                     else:
                         for post in entry["postList"]:
 
                             if post["url"] == url:
                                 result = "preexist"
-
-                #If the url doesn't turn up then we can look to see if the video
-                #itself has been seen before
-                if result == None:
-
-                    searchValue = {"hashHex": hashHex}
-                    response = self.video.find(searchValue)
-
-                    for entry in response:
-
-                        if entry["hashHex"] == hashHex and entry["url"] != url:
-                            result = entry["index"]
-
-                        else:
-                            for post in entry["postList"]:
-
-                                if post["url"] == url:
-                                    result = "preexist"
 
                 responding = True
 
