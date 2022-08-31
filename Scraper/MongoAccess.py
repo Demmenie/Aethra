@@ -86,11 +86,11 @@ class mongoServe:
                     if entry["hashHex"] == hashHex:
                         result = entry["index"]
 
-                    else:
-                        for post in entry["postList"]:
 
-                            if post["url"] == url:
-                                result = "preexist"
+                    for post in entry["postList"]:
+
+                        if post["url"] == url:
+                            result = "preexist"
 
                 responding = True
 
