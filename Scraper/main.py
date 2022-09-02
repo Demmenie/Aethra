@@ -140,19 +140,20 @@ class main:
 
                         #Searching the database to see if this video already
                         #exists.
-                        result = mongoServe().entryCheck(url, self.videoHashHex)
+                        result = mongoServe().entryCheck(url, self.videoHashHex,
+                            self.videoHashDec)
 
                         #Adding the new tweet to an existing entry
                         if result != None and result != "preexist":
-                            mongoServe().addToEntry(result, url,
-                            status.created_at.strftime("%H:%M:%S %d-%m-%y"))
+                            mongoServe().addToEntry(result["index"], url,
+                            datetime.datetime.timestamp(status.created_at))
 
                         #Creating a new entry for a new tweet.
                         elif result == None:
 
                             mongoServe().newEntry(self.videoHashDec,
                                 self.videoHashHex, url,
-                                status.created_at.strftime("%H:%M:%S %d-%m-%y"))
+                                datetime.datetime.timestamp(status.created_at))
 
 
     #---------------------------------------------------------------------------
