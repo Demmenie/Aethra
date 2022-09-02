@@ -45,8 +45,16 @@ class main:
             access_token_secret=self.keys["accessSecret"],
             wait_on_rate_limit=True)
 
+
+        mongoServe().fullBackup()
+        lastBackup = time.time()
         self.running = True
         while self.running:
+
+            if (lastBackup + 3600) < time.time():
+                mongoServe().fullBackup()
+                lastBackup = time.time()
+
             self.twitSave()
             print(f"[{datetime.datetime.now()}] Sleeping 60 secs")
             time.sleep(75)

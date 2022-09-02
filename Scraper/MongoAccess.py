@@ -40,6 +40,7 @@ class mongoServe:
         #MilVec collection.
         self.db = self.client.Aethra
         self.video = self.db.video
+        self.backup = self.db.backup
 
 
     #A function that checks if the vehicle already exists.
@@ -225,6 +226,24 @@ class mongoServe:
             except pymongo.errors.ServerSelectionTimeoutError as err:
                 print(f"[{datetime.datetime.now()}] Caught: {err}, sleeping 60")
                 time.sleep(60)
+
+
+    #---------------------------------------------------------------------------
+    def fullBackup(self):
+
+        """Backs up the database."""
+
+        print(f"[{datetime.datetime.now()}] Backing up database.")
+
+        self.allDocs = list(self.video.find({}).sort("index"))
+
+        for doc in self.allDocs:
+
+            self.backup.update_one({"index": doc["index"]},
+                {"$set": {"index": doc["index"],
+                "hashHex": doc["hashHex"],
+                "hashDec": doc["hashDec"],
+                "postList": doc["postList"]}}, upsert=True)
 
 
 #-------------------------------------------------------------------------------
