@@ -1,4 +1,4 @@
-#31/08/2022
+#02/09/2022
 #Chico Demmenie
 #Aethra/Scraper/MongoAccess.py
 
@@ -44,63 +44,60 @@ class mongoServe:
 
     #A function that checks if the vehicle already exists.
     #---------------------------------------------------------------------------
-    def entryCheck(self, url, hashHex):
+    def entryCheck(self, url, hashHex, hashDec):
 
         """Checks any entry against the database to see if the entry exists."""
 
         print(f"[{datetime.datetime.now()}] entryCheck()")
 
-        def addToVList(self, response):
+        #requesting all the documents in the database.
+        self.allDocs = list(self.video.find({}).sort("index"))
+        length = len(self.allDocs)
 
-            """Adds responses to self.valuesList"""
+        #Defining values for the while loop
+        result = None
+        halfLength = length / 2
+        modifyLength = copy.copy(halfLength)
+        searching = True
+        while searching:
 
-            for entry in response:
+            modifyLength = modifyLength / 2
+            halfFloor = math.floor(halfLength)
+            halfCeil = math.ceil(halfLength)
 
-                self.valuesList.append(entry)
+            floorDoc = self.allDocs[halfFloor]
+            ceilDoc = self.allDocs[halfCeil]
 
 
-        responding = False
-        while not responding:
-            try:
+            if floorDoc["hashHex"] == hashHex:
+                result = floorDoc
+                searching = False
 
-                searchValue = {"hashHex": hashHex}
-                response = self.video.find(searchValue)
-                self.valuesList = []
+            elif ceilDoc["hashHex"] == hashHex:
+                result = ceilDoc
+                searching = False
+
+            elif (int(floorDoc["hashDec"]) < hashDec and
+                int(ceilDoc["hashDec"]) > hashDec):
+
                 result = None
+                searching = False
+                break
 
-                addToVList(self, response)
+            elif int(ceilDoc["hashDec"]) < hashDec:
+                halfLength = halfLength + modifyLength
 
-                for entry in self.valuesList:
-                    searchValue = {"index": (entry["index"] + 1)}
-                    response1 = self.video.find(searchValue)
-
-                    searchValue = {"index": (entry["index"] - 1)}
-                    response2 = self.video.find(searchValue)
-
-                    addToVList(self, response1)
-                    addToVList(self, response2)
+            elif int(floorDoc["hashDec"]) > hashDec:
+                halfLength = halfLength - modifyLength
 
 
-                for entry in self.valuesList:
+            if result != None:
+                for post in result["postList"]:
 
-                    if entry["hashHex"] == hashHex:
-                        result = entry["index"]
+                    if post["url"] == url:
+                        result = "preexist"
+                        break
 
-
-                    for post in entry["postList"]:
-
-                        if post["url"] == url:
-                            result = "preexist"
-
-                responding = True
-
-            except pymongo.errors.NetworkTimeout as err:
-                print(f"[{datetime.datetime.now()}] Caught: {err}, sleeping 60")
-                time.sleep(60)
-
-            except pymongo.errors.ServerSelectionTimeoutError as err:
-                print(f"[{datetime.datetime.now()}] Caught: {err}, sleeping 60")
-                time.sleep(60)
 
         #Returning what we've found
         print(f"[{datetime.datetime.now()}] {result}")
