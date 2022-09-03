@@ -115,8 +115,9 @@ class mongoServe:
         responding = False
         while not responding:
             try:
-                #Finding the length of the list so far
-                length = self.video.count_documents({})
+                #requesting all the documents in the database.
+                self.allDocs = list(self.video.find({}).sort("index"))
+                length = len(self.allDocs)
 
                 #Creating a while loop to do binary search on the database.
                 halfLength = length / 2
@@ -128,8 +129,8 @@ class mongoServe:
                     halfFloor = math.floor(halfLength)
                     halfCeil = math.ceil(halfLength)
 
-                    floorDoc = self.video.find_one({"index": halfFloor})
-                    ceilDoc = self.video.find_one({"index": halfCeil})
+                    floorDoc = self.allDocs[halfFloor]
+                    ceilDoc = self.allDocs[halfCeil]
 
                     #We check the document above and below to figure out if we
                     #need to go higher or lower.
