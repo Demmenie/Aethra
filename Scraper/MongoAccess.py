@@ -92,6 +92,19 @@ class mongoServe:
                 halfLength = halfLength - modifyLength
 
 
+            #If either of the docs are None then we've reached the top
+            #or bottom.
+            elif modifyLength == 0 and int(ceilDoc["hashDec"]) > hashDec:
+
+                reult = None
+                searching = False
+
+            elif modifyLength == 0 and int(floorDoc["hashDec"]) < hashDec:
+
+                reult = None
+                searching = False
+
+
             if result != None:
                 for post in result["postList"]:
 
