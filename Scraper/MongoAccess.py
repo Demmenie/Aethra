@@ -68,7 +68,7 @@ class mongoServe:
 
             floorDoc = self.allDocs[halfFloor]
             ceilDoc = self.allDocs[halfCeil]
-
+            
 
             if floorDoc["hashHex"] == hashHex:
                 result = floorDoc
@@ -94,14 +94,15 @@ class mongoServe:
 
             #If either of the docs are None then we've reached the top
             #or bottom.
-            elif modifyLength == 0 and int(ceilDoc["hashDec"]) > hashDec:
+            elif floorDoc["index"] == 0 and int(floorDoc["hashDec"]) > hashDec:
 
-                reult = None
+                result = None
                 searching = False
 
-            elif modifyLength == 0 and int(floorDoc["hashDec"]) < hashDec:
+            elif ceilDoc["index"] == (length - 1) and (int(ceilDoc["hashDec"]) <
+                hashDec):
 
-                reult = None
+                result = None
                 searching = False
 
 
@@ -163,14 +164,16 @@ class mongoServe:
 
                     #If either of the docs are None then we've reached the top
                     #or bottom.
-                    elif floorDoc == None and int(ceilDoc["hashDec"]) > hashDec:
+                    elif floorDoc["index"] == 0 and (int(floorDoc["hashDec"]) >
+                        hashDec):
 
-                        index = ceilDoc["index"]
+                        index = floorDoc["index"]
                         searching = False
 
-                    elif ceilDoc == None and int(floorDoc["hashDec"]) < hashDec:
+                    elif (ceilDoc["index"] == (length - 1) and
+                        int(ceilDoc["hashDec"]) < hashDec):
 
-                        index = floorDoc["index"] + 1
+                        index = ceilDoc["index"]
                         searching = False
 
 
@@ -186,7 +189,11 @@ class mongoServe:
                     "index": index,
                     "hashDec": str(hashDec),
                     "hashHex": hashHex,
-                    "postList": [{"url": url,
+                    "postList": [{#"platform": platform,
+                    #"id": id,
+                    #"author": author,
+                    #"text": text,
+                    "url": url,
                     "timestamp": time.time(),
                     "uploadTime": uTime
                     }]
