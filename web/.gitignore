@@ -1,5 +1,6 @@
 *.pyc
-web/test.py
+test.py
 ../Scraper/test.py
 ../data/keys.json
-data/keys.json
+/web/data/keys.json
+.gcloudignore

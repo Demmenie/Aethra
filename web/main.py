@@ -1,4 +1,4 @@
-#03/07/2022
+#05/07/2022
 #Chico Demmenie
 #Aethra/web/mainWeb.py
 
@@ -16,7 +16,7 @@ app = Flask(__name__)
 def index():
     return render_template('index.html')
 
-#Gets the query from the form and redirects to that page.
+#Gets the query from the form, cleans it and redirects to that page.
 @app.route('/q', methods=["POST"])
 def sQuery():
 
@@ -34,16 +34,26 @@ def sQuery():
 def search():
 
     query = request.args.get('q')
-    response = DBSearch().standard(query)
-    print(response)
 
-    if response != None:
-        return render_template('search.html', searchTerm=query,
-            tweets=str(response))
+    #Doing another input clean due to url not being trustworthy.
+    cleanQuery = DBSearch().cleaning(query)
+
+    if not cleanQuery:
+        return redirect('/url_deny')
 
     else:
-        return render_template('notFound.html', searchTerm=query)
 
+        response = DBSearch().standard(query)
+        print(response)
+
+        if response != None:
+            return render_template('search.html', searchTerm=query,
+                tweets=str(response))
+
+        else:
+            return render_template('notFound.html', searchTerm=query)
+
+#The route used when an input seems malicious
 @app.route('/url_deny')
 def url_deny():
     return render_template('url_deny.html')
@@ -73,9 +83,15 @@ def javascript(filename):
 
 @app.errorhandler(404)
 def page_not_found(e):
-    # note that we set the 404 status explicitly
+    #Note that we set the 404 status explicitly
     return render_template('404.html'), 404
 
 
+@app.errorhandler(500)
+def server_error(e):
+    #Note that we set the 404 status explicitly
+    return render_template('500.html'), 500
+
+
 if __name__ == "__main__":
-    app.run(debug=False)
+    app.run(debug=True)
