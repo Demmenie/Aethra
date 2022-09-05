@@ -1,4 +1,4 @@
-#29/08/2022
+#05/09/2022
 #Chico Demmenie
 #Aethra/Scraper/Main.py
 
@@ -56,7 +56,7 @@ class main:
                 lastBackup = time.time()
 
             self.twitSave()
-            print(f"[{datetime.datetime.now()}] Sleeping 60 secs")
+            print(f"[{datetime.datetime.now()}] Sleeping 75 secs")
             time.sleep(75)
 
     #---------------------------------------------------------------------------
@@ -151,17 +151,28 @@ class main:
                         result = mongoServe().entryCheck(url, self.videoHashHex,
                             self.videoHashDec)
 
+                        #Creating a "post" object.
+                        class post:
+
+                            hashDec = self.videoHashDec
+                            hashHex = self.videoHashHex
+                            platform = "twitter"
+                            id = tweet.id
+                            author = status.author.screen_name
+                            text = status.text
+                            uTime = datetime.datetime.timestamp(
+                                status.created_at)
+
                         #Adding the new tweet to an existing entry
                         if result != None and result != "preexist":
-                            mongoServe().addToEntry(result["index"], url,
-                            datetime.datetime.timestamp(status.created_at))
+
+                            post.index = result["index"]
+                            mongoServe().addToEntry(post)
 
                         #Creating a new entry for a new tweet.
                         elif result == None:
 
-                            mongoServe().newEntry(self.videoHashDec,
-                                self.videoHashHex, url,
-                                datetime.datetime.timestamp(status.created_at))
+                            mongoServe().newEntry(post)
 
 
     #---------------------------------------------------------------------------

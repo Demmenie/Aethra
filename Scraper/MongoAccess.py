@@ -1,4 +1,4 @@
-#02/09/2022
+#05/09/2022
 #Chico Demmenie
 #Aethra/Scraper/MongoAccess.py
 
@@ -68,7 +68,9 @@ class mongoServe:
 
             floorDoc = self.allDocs[halfFloor]
             ceilDoc = self.allDocs[halfCeil]
-            
+
+            print(f"mod: {modifyLength} hashDec: {hashDec}",
+                f"floor: {floorDoc} ceil: {ceilDoc}")
 
             if floorDoc["hashHex"] == hashHex:
                 result = floorDoc
@@ -85,13 +87,6 @@ class mongoServe:
                 searching = False
                 break
 
-            elif int(ceilDoc["hashDec"]) < hashDec:
-                halfLength = halfLength + modifyLength
-
-            elif int(floorDoc["hashDec"]) > hashDec:
-                halfLength = halfLength - modifyLength
-
-
             #If either of the docs are None then we've reached the top
             #or bottom.
             elif floorDoc["index"] == 0 and int(floorDoc["hashDec"]) > hashDec:
@@ -104,6 +99,14 @@ class mongoServe:
 
                 result = None
                 searching = False
+
+
+            #Modifying the halfLength for next loop.
+            elif int(ceilDoc["hashDec"]) < hashDec:
+                halfLength = halfLength + modifyLength
+
+            elif int(floorDoc["hashDec"]) > hashDec:
+                halfLength = halfLength - modifyLength
 
 
             if result != None:
@@ -120,7 +123,7 @@ class mongoServe:
 
 
     #---------------------------------------------------------------------------
-    def newEntry(self, hashDec, hashHex, url, uTime):
+    def newEntry(self, post):
 
         """Creates a new video entry."""
 
@@ -148,33 +151,32 @@ class mongoServe:
 
                     #We check the document above and below to figure out if we
                     #need to go higher or lower.
-                    if floorDoc != None and ceilDoc != None:
+                    if (int(floorDoc["hashDec"]) < post.hashDec and
+                        int(ceilDoc["hashDec"]) > post.hashDec):
 
-                        if (int(floorDoc["hashDec"]) < hashDec and
-                            int(ceilDoc["hashDec"]) > hashDec):
-
-                            index = ceilDoc["index"]
-                            searching = False
-
-                        elif int(ceilDoc["hashDec"]) < hashDec:
-                            halfLength = halfLength + modifyLength
-
-                        elif int(floorDoc["hashDec"]) > hashDec:
-                            halfLength = halfLength - modifyLength
+                        index = ceilDoc["index"]
+                        searching = False
 
                     #If either of the docs are None then we've reached the top
                     #or bottom.
                     elif floorDoc["index"] == 0 and (int(floorDoc["hashDec"]) >
-                        hashDec):
+                        post.hashDec):
 
                         index = floorDoc["index"]
                         searching = False
 
                     elif (ceilDoc["index"] == (length - 1) and
-                        int(ceilDoc["hashDec"]) < hashDec):
+                        int(ceilDoc["hashDec"]) < post.hashDec):
 
                         index = ceilDoc["index"]
                         searching = False
+
+
+                    elif int(ceilDoc["hashDec"]) < post.hashDec:
+                        halfLength = halfLength + modifyLength
+
+                    elif int(floorDoc["hashDec"]) > post.hashDec:
+                        halfLength = halfLength - modifyLength
 
 
                 #Once we've found our index, we need to change the index of
@@ -187,15 +189,16 @@ class mongoServe:
                 #Setting up the details in the entry.
                 dataEntry = {
                     "index": index,
-                    "hashDec": str(hashDec),
-                    "hashHex": hashHex,
-                    "postList": [{#"platform": platform,
-                    #"id": id,
-                    #"author": author,
-                    #"text": text,
-                    "url": url,
+                    "hashDec": str(post.hashDec),
+                    "hashHex": post.hashHex,
+                    "postList": [{"platform": post.platform,
+                    "id": post.id,
+                    "author": post.author,
+                    "text": post.text,
+                    "url": (f"https://twitter.com/"
+                        f"{post.author}/status/{post.id}"),
                     "timestamp": time.time(),
-                    "uploadTime": uTime
+                    "uploadTime": post.uTime
                     }]
                 }
 
@@ -213,10 +216,8 @@ class mongoServe:
                 time.sleep(60)
 
 
-
-
     #---------------------------------------------------------------------------
-    def addToEntry(self, index, url, uTime):
+    def addToEntry(self, post):
 
         """Adds and extra post to an existing entry."""
 
@@ -226,15 +227,20 @@ class mongoServe:
         while not responding:
             try:
                 #First we find the entry that needs updating.
-                entry = self.video.find_one({"index": index})
+                entry = self.video.find_one({"index": post.index})
 
                 #Then we update the entry to include the new post.
                 if entry != None:
-                    self.video.update_one({"index": index},
+                    self.video.update_one({"index": post.index},
                         {"$push": {"postList":
-                        {"url": url,
+                        {"platform": post.platform,
+                        "id": post.id,
+                        "author": post.author,
+                        "text": post.text,
+                        "url": (f"https://twitter.com/"
+                            f"{post.author}/status/{post.id}"),
                         "timestamp": time.time(),
-                        "uploadTime": uTime}}})
+                        "uploadTime": post.uTime}}})
 
                     print(f"[{datetime.datetime.now()}], Updated: {entry}")
 
