@@ -69,8 +69,6 @@ class mongoServe:
             floorDoc = self.allDocs[halfFloor]
             ceilDoc = self.allDocs[halfCeil]
 
-            print(f"mod: {modifyLength} hashDec: {hashDec}",
-                f"floor: {floorDoc} ceil: {ceilDoc}")
 
             if floorDoc["hashHex"] == hashHex:
                 result = floorDoc
