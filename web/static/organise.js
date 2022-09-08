@@ -1,4 +1,4 @@
-//30/08/2022
+//09/09/2022
 //Aethra/web/organise.js
 //Chico Demmenie
 
@@ -12,8 +12,9 @@ function organise(tweetList){
 
       document.getElementById("tweet-container").appendChild(p);
     } else {
+
       //Converting the list on the html page into a json parseable list.
-      tweetList = JSON.parse(tweetList.replaceAll("'", '"'));
+      tweetList = JSON.parse(tweetList);
 
         twttr.ready(() => {
             for (let vid = 0; vid < tweetList.length; vid++) {

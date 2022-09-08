@@ -1,4 +1,4 @@
-#30/08/2022
+#09/09/2022
 #Chico Demmenie
 #Aethra/web/search.py
 
@@ -131,7 +131,7 @@ class DBSearch:
                     returnList.append(self.video.find_one({"index": (result["index"] - 1)},
                         projection={'_id': False}))
 
-                    return returnList
+                    return json.dumps(returnList)
 
                 else:
                     return result
