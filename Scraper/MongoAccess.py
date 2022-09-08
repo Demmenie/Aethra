@@ -201,7 +201,7 @@ class mongoServe:
                 }
 
                 self.video.insert_one(dataEntry)
-                print(f"[{datetime.datetime.now()}]", dataEntry)
+                print(f"[{datetime.datetime.now()}]", str(dataEntry))
 
                 responding = True
 

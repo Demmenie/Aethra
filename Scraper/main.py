@@ -14,14 +14,11 @@ from MongoAccess import mongoServe
 
 class main:
 
-    """The main class for the scraper"""
+    """The main class for the crawler"""
 
     def __init__(self):
 
-        """Initialises the core class functions"""
-
-        #Making sure the Mongo database works.
-        #mongoServe()
+        """Initialises the core class functions."""
 
         #Retrieving OAuth Twitter keys and lists
         self.keys = json.load(open("../data/keys.json", "r"))
@@ -46,6 +43,7 @@ class main:
             wait_on_rate_limit=True)
 
 
+        #Backing up the database on startup
         mongoServe().fullBackup()
         lastBackup = time.time()
         self.running = True
@@ -81,8 +79,7 @@ class main:
                 except tweepy.errors.TweepyException:
                     time.sleep(75)
 
-            print(f"[{datetime.datetime.now()}] list:",
-                str(list).encode('utf-8'))
+            print(f"[{datetime.datetime.now()}] list:", str(list))
 
 
             if list.meta["result_count"] != 0:
@@ -151,17 +148,19 @@ class main:
                         result = mongoServe().entryCheck(url, self.videoHashHex,
                             self.videoHashDec)
 
-                        #Creating a "post" object.
-                        class post:
+                        if result != "preexist":
+                            #Creating a "post" object.
+                            class post:
 
-                            hashDec = self.videoHashDec
-                            hashHex = self.videoHashHex
-                            platform = "twitter"
-                            id = tweet.id
-                            author = status.author.screen_name
-                            text = status.text
-                            uTime = datetime.datetime.timestamp(
-                                status.created_at)
+                                hashDec = self.videoHashDec
+                                hashHex = self.videoHashHex
+                                platform = "twitter"
+                                id = tweet.id
+                                author = status.author.screen_name
+                                text = status.text
+                                uTime = datetime.datetime.timestamp(
+                                    status.created_at)
+
 
                         #Adding the new tweet to an existing entry
                         if result != None and result != "preexist":
