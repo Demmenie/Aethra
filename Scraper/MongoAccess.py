@@ -1,4 +1,4 @@
-#05/09/2022
+#09/09/2022
 #Chico Demmenie
 #Aethra/Scraper/MongoAccess.py
 
@@ -45,7 +45,7 @@ class mongoServe:
 
     #A function that checks if the vehicle already exists.
     #---------------------------------------------------------------------------
-    def entryCheck(self, url, hashHex, hashDec):
+    def entryCheck(self, id, hashHex, hashDec):
 
         """Checks any entry against the database to see if the entry exists."""
 
@@ -110,7 +110,7 @@ class mongoServe:
             if result != None:
                 for post in result["postList"]:
 
-                    if post["url"] == url:
+                    if post["id"] == id:
                         result = "preexist"
                         break
 
@@ -193,8 +193,6 @@ class mongoServe:
                     "id": post.id,
                     "author": post.author,
                     "text": post.text,
-                    "url": (f"https://twitter.com/"
-                        f"{post.author}/status/{post.id}"),
                     "timestamp": time.time(),
                     "uploadTime": post.uTime
                     }]
@@ -235,8 +233,6 @@ class mongoServe:
                         "id": post.id,
                         "author": post.author,
                         "text": post.text,
-                        "url": (f"https://twitter.com/"
-                            f"{post.author}/status/{post.id}"),
                         "timestamp": time.time(),
                         "uploadTime": post.uTime}}})
 

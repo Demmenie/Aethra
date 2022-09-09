@@ -1,4 +1,4 @@
-#05/09/2022
+#09/09/2022
 #Chico Demmenie
 #Aethra/Scraper/Main.py
 
@@ -145,7 +145,7 @@ class main:
 
                         #Searching the database to see if this video already
                         #exists.
-                        result = mongoServe().entryCheck(url, self.videoHashHex,
+                        result = mongoServe().entryCheck(tweet.id, self.videoHashHex,
                             self.videoHashDec)
 
                         if result != "preexist":
