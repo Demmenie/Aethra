@@ -79,7 +79,7 @@ class main:
                 except tweepy.errors.TweepyException:
                     time.sleep(75)
 
-            print(f"[{datetime.datetime.now()}] list:", str(list))
+            print(f"[{datetime.datetime.now()}] list:", list)
 
 
             if list.meta["result_count"] != 0:
