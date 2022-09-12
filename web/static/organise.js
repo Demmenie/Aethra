@@ -35,8 +35,13 @@ function organise(tweetList){
               document.getElementById("tweet-container").appendChild(newVidDiv);
               document.getElementById("tweet-container").appendChild(br);
 
+              //Sorting the postList by uploadTime.
+              var postList = tweetList[vid]["postList"].sort(function(a, b){
+                return a["uploadTime"] - b["uploadTime"]
+              })
+
               //Adding each post for each video.
-              for (let post = 0; post < tweetList[vid]["postList"].length;
+              for (let post = 0; post < postList.length;
                 post++){
 
                 //A new element for each post.
@@ -51,7 +56,7 @@ function organise(tweetList){
                 newPostSpan.appendChild(postDisplay);
 
                 //Adding the upload datetime to the post.
-                var uTime = tweetList[vid]["postList"][post]["uploadTime"];
+                var uTime = postList[post]["uploadTime"];
                 var date = new Date(uTime * 1000).toUTCString();
 
                 var uDatetime = document.createElement('p');
@@ -61,7 +66,7 @@ function organise(tweetList){
                 postDisplay.appendChild(uDatetime);
 
                 //Finding the TweetID
-                var tweetID = tweetList[vid]["postList"][post]["id"];
+                var tweetID = postList[post]["id"];
 
                 //Creating the tweet embed with embed factory.
                 twttr.widgets.createTweet(
@@ -87,17 +92,29 @@ function organise(tweetList){
 
                 var author = document.createElement('p');
                 author.innerHTML = "Author: @" +
-                  tweetList[vid]["postList"][post]["author"];
+                  postList[post]["author"];
                 author.id = "author";
                 author.className = "meta";
                 metaDiv.appendChild(author);
 
                 var text = document.createElement('p');
                 text.innerHTML = "Caption: " +
-                  tweetList[vid]["postList"][post]["text"];
+                  postList[post]["text"];
                 text.id = "caption";
                 text.className = "meta";
                 metaDiv.appendChild(text);
+
+                var source = document.createElement('p');
+                var anchor = document.createElement('a');
+                source.innerHTML = "Source";
+                source.id = "source";
+                source.className = "meta";
+                anchor.href = "https://twitter.com/" +
+                  postList[post]["author"] + "/status/" +
+                  postList[post]["id"];
+                anchor.target = "_blank";
+                anchor.appendChild(source);
+                metaDiv.appendChild(anchor);
               }
           }
         })
