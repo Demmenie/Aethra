@@ -1,4 +1,4 @@
-#09/09/2022
+#14/09/2022
 #Chico Demmenie
 #Aethra/Scraper/MongoAccess.py
 
@@ -9,6 +9,7 @@ import sys
 import json
 import time
 import datetime
+import time
 import copy
 import math
 
@@ -51,9 +52,21 @@ class mongoServe:
 
         print(f"[{datetime.datetime.now()}] entryCheck()")
 
-        #requesting all the documents in the database.
-        self.allDocs = list(self.video.find({}).sort("index"))
-        length = len(self.allDocs)
+        responding = False
+        while not responding:
+
+            try:
+                #requesting all the documents in the database.
+                self.allDocs = list(self.video.find({}).sort("index"))
+                length = len(self.allDocs)
+                responding = True
+
+            except pymongo.errors.ServerSelectionTimeoutError as err:
+
+                print(print(f"[{datetime.datetime.now()}] Caught: {err}",
+                    "sleeping 60 secs."))
+                time.sleep(60)
+
 
         #Defining values for the while loop
         result = None
