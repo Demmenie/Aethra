@@ -155,7 +155,7 @@ class main:
                                 hashDec = self.videoHashDec
                                 hashHex = self.videoHashHex
                                 platform = "twitter"
-                                id = tweet.id
+                                id = str(tweet.id)
                                 author = status.author.screen_name
                                 text = status.text
                                 uTime = datetime.datetime.timestamp(
