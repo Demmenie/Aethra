@@ -123,7 +123,7 @@ class mongoServe:
             if result != None:
                 for post in result["postList"]:
 
-                    if post["id"] == id:
+                    if post["id"] == str(id):
                         result = "preexist"
                         break
 
