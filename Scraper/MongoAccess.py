@@ -4,8 +4,7 @@
 
 #Importing dependencies
 import pymongo
-from pymongo import MongoClient
-import sys
+import requests
 import json
 import time
 import datetime
@@ -62,7 +61,11 @@ class mongoServe:
                 responding = True
 
             except pymongo.errors.ServerSelectionTimeoutError as err:
-
+                print(print(f"[{datetime.datetime.now()}] Caught: {err}",
+                    "sleeping 60 secs."))
+                time.sleep(60)
+                
+            except requests.exceptions.ConnectionError as err:
                 print(print(f"[{datetime.datetime.now()}] Caught: {err}",
                     "sleeping 60 secs."))
                 time.sleep(60)
