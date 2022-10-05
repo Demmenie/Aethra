@@ -276,11 +276,32 @@ class mongoServe:
 
         for doc in self.allDocs:
 
-            self.backup.update_one({"index": doc["index"]},
-                {"$set": {"index": doc["index"],
-                "hashHex": doc["hashHex"],
-                "hashDec": doc["hashDec"],
-                "postList": doc["postList"]}}, upsert=True)
+            responding = False
+            while not responding:
+
+                try:
+                    self.backup.update_one({"index": doc["index"]},
+                        {"$set": {"index": doc["index"],
+                        "hashHex": doc["hashHex"],
+                        "hashDec": doc["hashDec"],
+                        "postList": doc["postList"]}}, upsert=True)
+
+                    responding = True
+
+                except pymongo.errors.NetworkTimeout as err:
+                    print(print(f"[{datetime.datetime.now()}] Caught: {err}",
+                        "sleeping 60 secs."))
+                    time.sleep(60)
+
+                except pymongo.errors.ServerSelectionTimeoutError as err:
+                    print(print(f"[{datetime.datetime.now()}] Caught: {err}",
+                        "sleeping 60 secs."))
+                    time.sleep(60)
+
+                except requests.exceptions.ConnectionError as err:
+                    print(print(f"[{datetime.datetime.now()}] Caught: {err}",
+                        "sleeping 60 secs."))
+                    time.sleep(60)
 
 
 #-------------------------------------------------------------------------------
