@@ -1,4 +1,4 @@
-#09/09/2022
+#05/10/2022
 #Chico Demmenie
 #Aethra/Scraper/Main.py
 
@@ -6,7 +6,6 @@ import tweepy
 import time
 import datetime
 import json
-import re
 import shutil
 import videohash
 from MongoAccess import mongoServe
@@ -18,7 +17,9 @@ class main:
 
     def __init__(self):
 
-        """Initialises the core class functions."""
+        """
+        Desc: Initialises the core class functions.
+        """
 
         #Retrieving OAuth Twitter keys and lists
         self.keys = json.load(open("../data/keys.json", "r"))
@@ -60,7 +61,9 @@ class main:
     #---------------------------------------------------------------------------
     def twitSave(self):
 
-        """Saves videos from Twitter."""
+        """
+        Desc: Saves videos from Twitter.
+        """
 
         #Going through the lists to find new tweets to add to the database.
         for list in self.lists:
@@ -177,12 +180,25 @@ class main:
     #---------------------------------------------------------------------------
     def videoHash(self, url):
 
-        """Hashes videos for storage."""
+        """
+        Desc: Hashes videos for storage or comparison.
+        
+        Input:
+            - url: The url of the video that needs to be hashed, can include
+            any website.
 
+        Output:
+            - self.videoHashHex: The Hexadecimal version of the hash
+            - self.videoHashDec: The Decimal version of the hash
+        """
+
+        #Creating the hash and storing the Hex and Decimal
         vHash = videohash.VideoHash(url=url)
         self.videoHashHex = vHash.hash_hex
         self.videoHashDec = int(self.videoHashHex, 16)
 
+        #Garbage collection: removing the video from temporary storage so we
+        #don't fill it up.
         videoPath = vHash.storage_path
         cutPath = videoPath[:videoPath.find("temp_storage_dir")]
 

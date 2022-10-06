@@ -1,4 +1,4 @@
-#14/09/2022
+#06/10/2022
 #Chico Demmenie
 #Aethra/Scraper/MongoAccess.py
 
@@ -47,7 +47,23 @@ class mongoServe:
     #---------------------------------------------------------------------------
     def entryCheck(self, id, hashHex, hashDec):
 
-        """Checks any entry against the database to see if the entry exists."""
+        """
+        Desc: Checks any entry against the database to see if the entry already
+        exists.
+        
+        Input:
+            - self
+            - id
+            - hashHex
+            - HashDec
+
+        Returns:
+            - Result:
+                - None (Means it isn't in the database),
+                - "Preexists" (Means that post has already been entered before)
+                - Video object (Means that the video has been seen before but 
+                    the post hasn't been entered yet.)
+        """
 
         print(f"[{datetime.datetime.now()}] entryCheck()")
 
@@ -65,6 +81,11 @@ class mongoServe:
                     "sleeping 60 secs."))
                 time.sleep(60)
                 
+            except requests.exceptions.ConnectionError as err:
+                print(print(f"[{datetime.datetime.now()}] Caught: {err}",
+                    "sleeping 60 secs."))
+                time.sleep(60)
+
             except requests.exceptions.ConnectionError as err:
                 print(print(f"[{datetime.datetime.now()}] Caught: {err}",
                     "sleeping 60 secs."))
@@ -139,7 +160,16 @@ class mongoServe:
     #---------------------------------------------------------------------------
     def newEntry(self, post):
 
-        """Creates a new video entry."""
+        """
+        Desc: Creates a new video entry.
+        
+        Input:
+            - self
+            - post (An object describing the post that needs to be entered.)
+        
+        Output:
+            - Adds a new video object to the database 
+        """
 
         print(f"[{datetime.datetime.now()}] newEntry()")
 
@@ -227,6 +257,11 @@ class mongoServe:
                 print(f"[{datetime.datetime.now()}] Caught: {err}, sleeping 60")
                 time.sleep(60)
 
+            except requests.exceptions.ConnectionError as err:
+                print(print(f"[{datetime.datetime.now()}] Caught: {err}",
+                    "sleeping 60 secs."))
+                time.sleep(60)
+
 
     #---------------------------------------------------------------------------
     def addToEntry(self, post):
@@ -264,6 +299,11 @@ class mongoServe:
                 print(f"[{datetime.datetime.now()}] Caught: {err}, sleeping 60")
                 time.sleep(60)
 
+            except requests.exceptions.ConnectionError as err:
+                print(print(f"[{datetime.datetime.now()}] Caught: {err}",
+                    "sleeping 60 secs."))
+                time.sleep(60)
+
 
     #---------------------------------------------------------------------------
     def fullBackup(self):
@@ -272,14 +312,15 @@ class mongoServe:
 
         print(f"[{datetime.datetime.now()}] Backing up database.")
 
-        self.allDocs = list(self.video.find({}).sort("index"))
+        responding = False
+        while not responding:
 
-        for doc in self.allDocs:
+            try:
+                self.allDocs = list(self.video.find({}).sort("index"))
 
-            responding = False
-            while not responding:
 
-                try:
+                for doc in self.allDocs:
+
                     self.backup.update_one({"index": doc["index"]},
                         {"$set": {"index": doc["index"],
                         "hashHex": doc["hashHex"],
@@ -288,20 +329,20 @@ class mongoServe:
 
                     responding = True
 
-                except pymongo.errors.NetworkTimeout as err:
-                    print(print(f"[{datetime.datetime.now()}] Caught: {err}",
-                        "sleeping 60 secs."))
-                    time.sleep(60)
+            except pymongo.errors.NetworkTimeout as err:
+                print(print(f"[{datetime.datetime.now()}] Caught: {err}",
+                    "sleeping 60 secs."))
+                time.sleep(60)
 
-                except pymongo.errors.ServerSelectionTimeoutError as err:
-                    print(print(f"[{datetime.datetime.now()}] Caught: {err}",
-                        "sleeping 60 secs."))
-                    time.sleep(60)
+            except pymongo.errors.ServerSelectionTimeoutError as err:
+                print(print(f"[{datetime.datetime.now()}] Caught: {err}",
+                    "sleeping 60 secs."))
+                time.sleep(60)
 
-                except requests.exceptions.ConnectionError as err:
-                    print(print(f"[{datetime.datetime.now()}] Caught: {err}",
-                        "sleeping 60 secs."))
-                    time.sleep(60)
+            except requests.exceptions.ConnectionError as err:
+                print(print(f"[{datetime.datetime.now()}] Caught: {err}",
+                    "sleeping 60 secs."))
+                time.sleep(60)
 
 
 #-------------------------------------------------------------------------------
