@@ -53,7 +53,7 @@ class DBSearch:
             clean = False
             print("http")
 
-        elif query.find(".", 8) < 0 or query.find(".", 8) < 0:
+        elif query.find(".", 8) < 0 or query.find(".", 8) < 0:  
 
             clean = False
             print("./")
