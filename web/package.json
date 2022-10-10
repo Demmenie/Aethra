@@ -1,0 +1,18 @@
+{
+    "name": "Aethra",
+    "version": "0.3",
+    "description": "A reverse video search engine.",
+    "main": "index.js",
+    "scripts": {
+        "start": "nodemon index.js",
+        "install": "set DEBUG=app & nodemon index.js"
+    },
+    "author": "Chico Demmenie",
+    "dependencies": {
+        "chalk": "^4.1.2",
+        "debug": "^4.1.1",
+        "express": "^4.18.1",
+        "morgan": "^1.10.0",
+        "nodemon": "2.0.20"
+    }
+}
