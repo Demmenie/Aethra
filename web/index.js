@@ -3,11 +3,23 @@
  *  Aethra/web/index.js
  */
 const express = require('express');
-const path = require('path')
-const fs = require('fs')
-const debug = require('debug')('app') 
+const path = require('path');
+const fs = require('fs');
 const morgan = require('morgan');
-const { spawn } = require('child_process')
+const pb = require('python-bridge');
+const python = pb();
+
+//Getting the search class from python
+const sPath = path.join(__dirname, 'search.py')
+python.ex`
+import importlib.util
+import sys
+spec = importlib.util.spec_from_file_location("search", ${sPath})
+search = importlib.util.module_from_spec(spec)
+sys.modules["DBSearch"] = search
+spec.loader.exec_module(search)
+DBSearch = search.DBSearch()
+`
 
 
 //------------------------------------------------------------------------
@@ -43,7 +55,24 @@ const server = () => {
     })
 
     this.app.get('/search', (req, res) => {
-        req.query.q
+        async function cleaning() {
+            return await python`search.DBSearch().cleaning(
+                ${req.query.q}
+            )`;
+        }
+        clean = cleaning();
+
+        if (clean) {
+            async function sSearch() {
+                return await python`search.DBSearch().standard(
+                    ${req.query.q}
+                )`;
+            }
+            const response = sSearch();
+
+        } else {
+            res.redirect('/url_deny')
+        }
     })
 
     /*
