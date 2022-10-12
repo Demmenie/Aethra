@@ -2,5 +2,6 @@
 test.py
 ../Scraper/test.py
 ../data/keys.json
-/web/data/keys.json
+/data
 .gcloudignore
+/node_modules

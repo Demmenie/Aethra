@@ -54,25 +54,38 @@ const server = () => {
         res.redirect(`/search?q=${query}`)
     })
 
+    //This calls the python search function and returns the completed view.
     this.app.get('/search', (req, res) => {
+        /*Calling the cleaning function to make sure that the input is a
+        link and not something else.*/
         async function cleaning() {
             return await python`search.DBSearch().cleaning(
                 ${req.query.q}
             )`;
         }
-        clean = cleaning();
 
-        if (clean) {
-            async function sSearch() {
-                return await python`search.DBSearch().standard(
-                    ${req.query.q}
-                )`;
+        cleaning().then(function(clean){
+            //If the input is clean then we'll go look for it.
+            if (clean) {
+                async function sSearch() {
+                    return await python`search.DBSearch().standard(
+                        ${req.query.q}
+                    )`;
+                }
+                sSearch().then(function(response) {
+
+                    //If the search returns 'null' then there's nothing to show the user
+                    if (response == null) {
+                        res.render('notFound', {searchTerm: req.query.q})
+                    } else {
+                        res.render('search', {tweets: response, searchTerm: req.query.q})
+                    }
+                })
+
+            } else {
+                res.redirect(`/url_deny?q=${req.query.q}`)
             }
-            const response = sSearch();
-
-        } else {
-            res.redirect('/url_deny')
-        }
+        })
     })
 
     /*
@@ -87,6 +100,11 @@ const server = () => {
         res.render('index', {letters: text, url: link})
     })
     */
+
+    this.app.get('/url_deny', (req, res) => {
+        // Render page
+        res.render('url_deny', {searchTerm: req.query.q})
+    });
 
     const sendFile = (req, res) => {
         const assetsPath = path.join(__dirname, 'assets');
@@ -124,6 +142,7 @@ const server = () => {
 
                     //This exposes the js files that the client needs.
                     this.app.get(`/static/${file}`, (req, res) => {
+                        res.setHeader('content-type', 'text/javascript');
                         res.sendFile(path.join(__dirname, `static/${file}`))
                     })
                     
@@ -138,7 +157,6 @@ const server = () => {
             });        
         });
     }
-
     sendFile();
 
     this.app.listen(this.port, () => {

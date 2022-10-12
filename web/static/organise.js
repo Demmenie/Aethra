@@ -14,7 +14,9 @@ function organise(tweetList){
     } else {
 
       //Converting the list on the html page into a json parseable list.
-      tweetList = JSON.parse(tweetList);
+      //tweetList = JSON.parse(tweetList);
+
+      console.log(tweetList);
 
         twttr.ready(() => {
             for (let vid = 0; vid < tweetList.length; vid++) {

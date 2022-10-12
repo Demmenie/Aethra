@@ -5,25 +5,23 @@
     <meta charset="utf-8">
     <title>Aethra</title>
 
-    <link rel="stylesheet" href="static/css/searchStyle.css" />
+    <link rel="stylesheet" href="static/css/extraStyle.css" />
     <link rel="stylesheet" href="https://pyscript.net/alpha/pyscript.css"/>
 
   </head>
   <body>
 
-    <div id="centre-box" class="topbar">
+    <div id="centre-box" class="topbar" href="/">
       <div id="icon" class="topbar">
         <a href="/">
-          <img src="Icon.png" alt="Aethra icon" href="index.html" width="85"
-          height="85" class="topbar">
+          <img src="/assets/Icon.png" alt="Aethra icon" width="85" height="85"
+          class="topbar">
         </a>
       </div>
 
-      <a href="/">
-        <h1 id="title-text" class="topbar">
-          Aethra
-        </h1>
-      </a>
+      <h1 id="title-text" class="topbar">
+        Aethra
+      </h1>
 
       <div id="cover">
         <form method="post" action="/q">
@@ -31,7 +29,7 @@
           <div class="tb">
             <div class="td">
               <input name="search" id="search" type="text" placeholder="URL"
-              value="{{ searchTerm }}" required autofocus>
+              value="<%= searchTerm %>" required autofocus>
             </div>
 
             <div class="td" id="s-cover">
@@ -49,14 +47,7 @@
 
     </div>
 
-    <div id="tweet-container"></div>
-    <div>
-      <script type="text/javascript" src="widgets.js"></script>
-      <script type="text/javascript" src="organise.js"></script>
-      <script type="text/javascript">
-        organise({{ tweets | tojson }});
-      </script>
-    </div>
+    <p id="text">Hmmm, either that doesn't look like a URL...or I'm not allowed to see it. 🤔</p>
   </body>
 
   <footer class="footer">
@@ -70,7 +61,6 @@
               <a
                 class="Header-link "
                 href="https://github.com/Demmenie/Aethra"
-                target=”_blank”
                 data-hotkey="g d"
                 aria-label="Homepage "
                 data-turbo="false"
@@ -83,14 +73,14 @@
             </div>
 
             <div id="logo">
-              <a href="https://twitter.com/CDemmenie" target=”_blank”>
-                <img src="/twitterLogo.png" width="32" height="32"></img>
+              <a href="https://twitter.com/CDemmenie">
+                <img src="/assets/twitterLogo.png" width="32" height="32"></img>
               </a>
             </div>
 
             <div id="logo">
-              <a href="https://www.buymeacoffee.com/Demmenie" target=”_blank”>
-                <img src="/bmc_icon.png" width="27" height="27"></img>
+              <a href="https://www.buymeacoffee.com/Demmenie">
+                <img src="/assets/bmc_icon.png" width="32" height="32"></img>
               </a>
             </div>
 

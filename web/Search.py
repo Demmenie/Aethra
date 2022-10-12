@@ -36,7 +36,7 @@ class DBSearch:
             serverSelectionTimeoutMS=5000)
 
         #Setting the class wide variables that connect to the database and the
-        #MilVec collection.
+        #video collection.
         self.db = self.client.Aethra
         self.video = self.db.video
 
@@ -51,19 +51,16 @@ class DBSearch:
             query.find("http://", 0, 8) != 0):
 
             clean = False
-            print("http")
 
         elif query.find(".", 8) < 0 or query.find(".", 8) < 0:  
 
             clean = False
-            print("./")
 
         else:
             for char in list(query):
 
                 if char in ["{", "}", "|", "\\", "^", "~", "[", "]", "`"]:
 
-                    print("char")
                     clean = False
                     break
 
