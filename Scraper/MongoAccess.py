@@ -102,6 +102,11 @@ class mongoServe:
                     "sleeping 60 secs."))
                 time.sleep(60)
 
+            except ConnectionResetError as err:
+                print(print(f"[{datetime.datetime.now()}] Caught: {err}",
+                    "sleeping 60 secs."))
+                time.sleep(60)
+
 
         #Defining values for the while loop
         result = None
@@ -283,6 +288,11 @@ class mongoServe:
                     "sleeping 60 secs."))
                 time.sleep(60)
 
+            except ConnectionResetError as err:
+                print(print(f"[{datetime.datetime.now()}] Caught: {err}",
+                    "sleeping 60 secs."))
+                time.sleep(60)
+
 
     #---------------------------------------------------------------------------
     def addToEntry(self, post):
@@ -335,6 +345,11 @@ class mongoServe:
                     "sleeping 60 secs."))
                 time.sleep(60)
 
+            except ConnectionResetError as err:
+                print(print(f"[{datetime.datetime.now()}] Caught: {err}",
+                    "sleeping 60 secs."))
+                time.sleep(60)
+
 
     #---------------------------------------------------------------------------
     def fullBackup(self):
@@ -381,6 +396,11 @@ class mongoServe:
                 time.sleep(60)
 
             except http.client.RemoteDisconnected as err:
+                print(print(f"[{datetime.datetime.now()}] Caught: {err}",
+                    "sleeping 60 secs."))
+                time.sleep(60)
+
+            except ConnectionResetError as err:
                 print(print(f"[{datetime.datetime.now()}] Caught: {err}",
                     "sleeping 60 secs."))
                 time.sleep(60)

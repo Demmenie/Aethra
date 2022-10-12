@@ -1,0 +1,7 @@
+*.pyc
+web/test.py
+Scraper/test.py
+data/keys.json
+web/data/keys.json
+web/.gcloudignore
+web/node_modules
