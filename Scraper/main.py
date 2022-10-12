@@ -3,6 +3,9 @@
 #Aethra/Scraper/Main.py
 
 import tweepy
+import requests
+import urllib3
+import http
 import time
 import datetime
 import json
@@ -119,6 +122,26 @@ class main:
                             print(f"[{datetime.datetime.now()}] Caught error:",
                                 f"{err}, sleeping 60 secs")
                             print(type(err))
+                            time.sleep(60)
+
+                        except requests.exceptions.ConnectionError as err:
+                            print(print(f"[{datetime.datetime.now()}] Caught: {err}",
+                                "sleeping 60 secs."))
+                            time.sleep(60)
+
+                        except urllib3.exceptions.ProtocolError as err:
+                            print(print(f"[{datetime.datetime.now()}] Caught: {err}",
+                                "sleeping 60 secs."))
+                            time.sleep(60)
+
+                        except http.client.RemoteDisconnected as err:
+                            print(print(f"[{datetime.datetime.now()}] Caught: {err}",
+                                "sleeping 60 secs."))
+                            time.sleep(60)
+
+                        except ConnectionResetError as err:
+                            print(print(f"[{datetime.datetime.now()}] Caught: {err}",
+                                "sleeping 60 secs."))
                             time.sleep(60)
 
                     if errType == tweepy.errors.NotFound:
