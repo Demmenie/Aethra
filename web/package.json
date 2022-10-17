@@ -14,7 +14,6 @@
         "express": "^4.18.1",
         "morgan": "^1.10.0",
         "nodemon": "^2.0.20",
-        "ejs": "^3.1.8",
         "python-bridge": "^1.1.0"
     },
     "devDependencies": {

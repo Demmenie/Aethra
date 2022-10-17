@@ -22,7 +22,7 @@ DBSearch = search.DBSearch()
 `
 
 
-//------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 // Initialise server variables
 const init = () => {
     // initialise express app
@@ -37,7 +37,7 @@ const init = () => {
 }
 
 
-//------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 // Server runtime function
 const server = () => {
     // listens for activity on root page
@@ -74,11 +74,13 @@ const server = () => {
                 }
                 sSearch().then(function(response) {
 
-                    //If the search returns 'null' then there's nothing to show the user
+                    /*If the search returns 'null' then there's nothing to
+                    show the user*/
                     if (response == null) {
                         res.render('notFound', {searchTerm: req.query.q})
                     } else {
-                        res.render('search', {tweets: response, searchTerm: req.query.q})
+                        res.render('search',
+                        {tweets: response, searchTerm: req.query.q})
                     }
                 })
 
@@ -101,64 +103,71 @@ const server = () => {
     })
     */
 
+    // Sends a specific page when the search term isn't clean.
     this.app.get('/url_deny', (req, res) => {
-        // Render page
         res.render('url_deny', {searchTerm: req.query.q})
     });
 
-    const sendFile = (req, res) => {
-        const assetsPath = path.join(__dirname, 'assets');
-        fs.readdir(assetsPath, (err, assetFiles) => {
-            //handling error
-            if (err) {
-                return console.log('Unable to scan directory: ' + err);
-            } 
+    // Returns any document within the 'assets' directory.
+    this.app.get(`/assets/*`, (req, res) => {
+        const assetPath = path.join(__dirname, req.path);
 
-            //listing all files using forEach
-            assetFiles.forEach((file) => {
-                this.app.get(`/assets/${file}`, (req, res) => {
-                    res.sendFile(path.join(__dirname, `assets/${file}`))
-                })
-            });
-        });
+        // If the file doesn't exist return 404
+        try {
+            if (fs.existsSync(assetPath)) {
+                res.sendFile(assetPath)
+            } else {
+                send404(req, res)
+            }
+          } catch(err) {
+            send404(req, res);
+          }
+    });
 
-        //Defining paths for files the client needs.
-        const staticPath = path.join(__dirname, 'static');
-        const CSSPath = path.join(__dirname, 'static/CSS');
-        fs.readdir(staticPath, (err, staticFiles) => {
-            //handling error
-            if (err) {
-                return console.log('Unable to scan directory: ' + err);
-            } 
+    // Returns any document within the 'static' directory
+    this.app.get(`/static/*`, (req, res) => {
+        const assetPath = path.join(__dirname, req.path);
 
-            fs.readdir(CSSPath, (err, CSSFiles) => {
-                //handling error
-                if (err) {
-                    return console.log('Unable to scan directory: ' + err);
-                } 
+        try {
+            if (fs.existsSync(assetPath)) {
+                res.sendFile(assetPath)
+            } else {
+                send404(req, res)
+            }
+          } catch(err) {
+            send404(req, res);
+          }
+    });
 
-                //listing all files using forEach
-                staticFiles.forEach((file) => {
+    // Sends any request that isn't recognised before this to the 404 function.
+    this.app.get('*', (req, res, next) => {
+        send404(req, res);
+    });
 
-                    //This exposes the js files that the client needs.
-                    this.app.get(`/static/${file}`, (req, res) => {
-                        res.setHeader('content-type', 'text/javascript');
-                        res.sendFile(path.join(__dirname, `static/${file}`))
-                    })
-                    
-                    //This exposes all the CSS files.
-                    CSSFiles.forEach((file) => {
-                        this.app.get(`/static/css/${file}`, (req, res) => {
-                            res.sendFile(path.join(__dirname,
-                                `static/css/${file}`))
-                        })
-                    })
-                });
-            });        
-        });
+    // A function that will respond with a 404 error.
+    function send404(req, res) {
+        // Setting the response code to 404
+        res.status(404);
+      
+        // respond with html page rendered with the correct message
+        if (req.accepts('html')) {
+            res.render('error', {url: req.url, error: '404: Page not found.',
+            text: "Oops! Please try a different page, this one doesn't exist"+
+            "...(It's us not you)"});
+            return;
+        }
+      
+        // respond with json
+        if (req.accepts('json')) {
+          res.json({ error: '404: Not found' });
+          return;
+        }
+      
+        // default to plain-text
+        res.type('txt').send('404: Not found');
     }
-    sendFile();
-
+    
+    // Start listening on the standard port
     this.app.listen(this.port, () => {
         console.log(`Server Listening on port ${this.port}`);
     });
