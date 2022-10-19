@@ -78,6 +78,8 @@ const server = () => {
                     show the user*/
                     if (response == null) {
                         res.render('notFound', {searchTerm: req.query.q})
+                    } else if (response == "download_failed"){
+                        sendErr(req, res, 500)
                     } else {
                         res.render('search',
                         {tweets: response, searchTerm: req.query.q})
@@ -117,10 +119,10 @@ const server = () => {
             if (fs.existsSync(assetPath)) {
                 res.sendFile(assetPath)
             } else {
-                send404(req, res)
+                send404(req, res, 404)
             }
           } catch(err) {
-            send404(req, res);
+            sendErr(req, res, 404);
           }
     });
 
@@ -132,39 +134,48 @@ const server = () => {
             if (fs.existsSync(assetPath)) {
                 res.sendFile(assetPath)
             } else {
-                send404(req, res)
+                sendErr(req, res, 404)
             }
           } catch(err) {
-            send404(req, res);
+            sendErr(req, res, 404);
           }
     });
 
     // Sends any request that isn't recognised before this to the 404 function.
     this.app.get('*', (req, res, next) => {
-        send404(req, res);
+        const err = 404
+        sendErr(req, res, err);
     });
 
     // A function that will respond with a 404 error.
-    function send404(req, res) {
+    function sendErr(req, res, err) {
         // Setting the response code to 404
-        res.status(404);
+        res.status(err);
+
+        if (err == 404){
+            title = "404: Page doesn't exist"
+            text = "Whoops, Wrong page...maybe try a different one?"
+        } else if (err == 500){
+            title = "500: Server error"
+            text = "Oops, something went wrong (It's us not you)..."+
+                "maybe try again? 🤷"
+        }
       
         // respond with html page rendered with the correct message
         if (req.accepts('html')) {
-            res.render('error', {url: req.url, error: '404: Page not found.',
-            text: "Oops! Please try a different page, this one doesn't exist"+
-            "...(It's us not you)"});
+            res.render('error', {url: req.url, error: title,
+            text: text});
             return;
         }
       
         // respond with json
         if (req.accepts('json')) {
-          res.json({ error: '404: Not found' });
+          res.json({ error: err });
           return;
         }
       
         // default to plain-text
-        res.type('txt').send('404: Not found');
+        res.type('txt').send(err);
     }
     
     // Start listening on the standard port

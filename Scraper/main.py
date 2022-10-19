@@ -193,7 +193,7 @@ class main:
         """
 
         #Creating the hash and storing the Hex and Decimal
-        vHash = videohash.VideoHash(url=url)
+        vHash = videohash.VideoHash(url=url, frame_interval=12)
         self.videoHashHex = vHash.hash_hex
         self.videoHashDec = int(self.videoHashHex, 16)
 
