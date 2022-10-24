@@ -85,6 +85,26 @@ class main:
                 except tweepy.errors.TweepyException:
                     time.sleep(75)
 
+                except requests.exceptions.ConnectionError as err:
+                    print(print(f"[{datetime.datetime.now()}] Caught: {err}",
+                        "sleeping 60 secs."))
+                    time.sleep(60)
+
+                except urllib3.exceptions.ProtocolError as err:
+                    print(print(f"[{datetime.datetime.now()}] Caught: {err}",
+                        "sleeping 60 secs."))
+                    time.sleep(60)
+
+                except http.client.RemoteDisconnected as err:
+                    print(print(f"[{datetime.datetime.now()}] Caught: {err}",
+                        "sleeping 60 secs."))
+                    time.sleep(60)
+
+                except ConnectionResetError as err:
+                    print(print(f"[{datetime.datetime.now()}] Caught: {err}",
+                        "sleeping 60 secs."))
+                    time.sleep(60)
+
             print(f"[{datetime.datetime.now()}] list:", list)
 
 
