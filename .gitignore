@@ -1,0 +1,9 @@
+*.pyc
+/web/test.py
+/crawler/test.py
+/data
+/web/data
+/web/.gcloudignore
+/web/node_modules
+/.vscode
+web/data/keys.json
