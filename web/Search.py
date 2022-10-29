@@ -1,4 +1,4 @@
-#09/09/2022
+#29/10/2022
 #Chico Demmenie
 #Aethra/web/search.py
 
@@ -10,7 +10,6 @@ import shutil
 import json
 import copy
 import math
-import time
 
 class DBSearch:
 
@@ -39,7 +38,7 @@ class DBSearch:
         #Setting the class wide variables that connect to the database and the
         #video collection.
         self.db = self.client.Aethra
-        self.video = self.db.video
+        self.video = self.db.video2
 
 
     #---------------------------------------------------------------------------
@@ -81,14 +80,8 @@ class DBSearch:
             print(f"videoHash errored out with exception:\n{err}")
             return "download_failed"
 
-        responding = False
-        while not responding:
-            try:
-                #Finding the length of the list so far
-                length = len(allDocs)
-
         #Finding the length of the list so far
-        length = self.video.count_documents({})
+        length = len(allDocs)
 
         result = None
         halfLength = length / 2
