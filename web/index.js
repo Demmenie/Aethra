@@ -45,6 +45,8 @@ const init = () => {
 //------------------------------------------------------------------------------
 // Server runtime function
 const server = () => {
+
+    // =================================
     // listens for activity on root page
     // takes request, response
     this.app.get('/', (req, res) => {
@@ -59,6 +61,7 @@ const server = () => {
         res.redirect(`/search?q=${query}`)
     })
 
+    // =================================
     //This calls the python search function and returns the completed view.
     this.app.get('/search', (req, res) => {
         /*Calling the cleaning function to make sure that the input is a
@@ -97,17 +100,19 @@ const server = () => {
         })
     })
 
-
+    // =================================
+    // Returns the about page.
     this.app.get('/about', (req, res) => {
         res.sendFile(path.join(__dirname, "templates/about.html"))
     })
 
+    // =================================
     // Sends a specific page when the search term isn't clean.
     this.app.get('/url_deny', (req, res) => {
         res.render('url_deny', {searchTerm: req.query.q})
     });
 
-
+    // =================================
     // Returns any document within the 'assets' directory.
     this.app.get(`/assets/*`, (req, res) => {
         const assetPath = path.join(__dirname, req.path);
@@ -124,6 +129,7 @@ const server = () => {
           }
     });
 
+    // =================================
     // Returns any document within the 'static' directory
     this.app.get(`/static/*`, (req, res) => {
         const assetPath = path.join(__dirname, req.path);
@@ -139,12 +145,14 @@ const server = () => {
           }
     });
 
+    // =================================
     // Sends any request that isn't recognised before this to the 404 function.
     this.app.get('*', (req, res, next) => {
         const err = 404
         sendErr(req, res, err);
     });
 
+    // =================================
     // A function that will respond with a 404 error.
     function sendErr(req, res, err) {
         // Setting the response code to 404
@@ -183,83 +191,33 @@ const server = () => {
 }
 
 
-/*
-//------------------------------------------------------------------------
-const isWord = () => {
-    const letterJSON = require('./letters.json');
-    const monkeyWordArray = letterJSON.letters;
-
-    const loop = () => {
-        for(const word of this.wordArray){
-            if(word.length >= 2 && word[word.length - 1] == monkeyWordArray[monkeyWordArray.length - 1]){
-                let substring = monkeyWordArray.slice(-word.length);
-
-                if(substring.toString().replaceAll(',' , '') == word){
-                    letterJSON.words.push(
-                        [word, 
-                        monkeyWordArray.length - word.length,
-                        monkeyWordArray.length - 1]);
-
-                    let data = JSON.stringify(letterJSON);
-
-                    fs.writeFile('./letters.json', data, err => {
-                        if (err)
-                            console.error(err);
-                        else
-                            console.log('Monkey made a word')
-                    })
-                }
-            }
-        }
-        setTimeout(loop, 1000)
-    }
-    loop()
-}
-*/
-
+// ------------------------------------------------------------------------------
 const getList = () => {
     // Retrieves the list of videos from the database every 15 mins
     console.log("Starting getList() loop.")
+
+    // Creating a recurring loop
     loop = () => {
         const time = (new Date().getTime() / 1000)
+
+        // This should update every 15 mins.
         if (this.lastUpdate + 900 < time){
             console.log("Updating allDocs / uList.")
+            
+            // An async function that calls the python function to update
+            // Returns this.uList and this.lastUpdate.
             async function refresh(){
                 this.uList = await python`search.DBSearch().updateList()`
                 this.lastUpdate = (new Date().getTime() / 1000)
                 console.log(`Updated uList at ${this.lastUpdate}`)
             }
             refresh(this);
+
         }
     }
     loop();
+
 }
 
-/*
-//------------------------------------------------------------------------
-// Get letter and add it too the JSON
-
-const getLetter = () => {
-    // Gets a letters, adds it to the current contents of the JSON and then
-    // Rewrites the JSON
-    loop = () => {
-        let letterJSON = require('./letters.json');
-        this.Monkey.pickNumber();
-        let num = this.Monkey.number
-
-        let char = this.Monkey.typeWriter.keys[num];
-
-        letterJSON.letters.unshift(char);
-        let data = JSON.stringify(letterJSON);
-        fs.writeFile('letters.json', data, err => {
-            if (err)
-                console.error(`The monkeys have decided to play with their shit: \n ${err}`);
-        });
-
-        setTimeout(loop, 1000);
-    }
-    loop()
-}
-*/
 
 init();
