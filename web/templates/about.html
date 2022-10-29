@@ -3,7 +3,7 @@
   <head>
 
     <meta charset="utf-8">
-    <title>Aethra</title>
+    <title>About · Aethra</title>
 
     <link rel="stylesheet" href="static/css/extraStyle.css" />
     <link rel="stylesheet" href="https://pyscript.net/alpha/pyscript.css"/>
@@ -14,13 +14,15 @@
     <div id="centre-box" class="topbar" href="/">
       <div id="icon" class="topbar">
         <a href="/">
-          <img src="Icon.png" alt="Aethra icon" width="85" height="85"
+          <img src="/assets/Icon.png" alt="Aethra icon" width="85" height="85"
           class="topbar">
-      </a>
+        </a>
       </div>
 
       <h1 id="title-text" class="topbar">
-        Aethra
+        <a href="/">
+          Aethra
+        </a>
       </h1>
 
       <div id="cover">
@@ -28,8 +30,7 @@
 
           <div class="tb">
             <div class="td">
-              <input name="search" id="search" type="text" placeholder="URL"
-                required autofocus>
+              <input name="search" id="search" type="text" placeholder="URL">
             </div>
 
             <div class="td" id="s-cover">
@@ -47,7 +48,18 @@
 
     </div>
 
-    <p id="text">Oops! Something went wrong. Maybe try again? 🤷‍♀️</p>
+    <p id="text">
+      This is a website that allows you to search for videos using only a URL.
+      To use this tool, just enter the URL in the search bar and wait (it may
+      take a while).
+      It's currently still being worked on, so expect to see it change and
+      improve from time to time.
+    </p>
+    <p id="text">
+      If you see any bugs, issues or possible improvements, feel free to use the
+      links at the bottom of the page to either tweet them at me or create an
+      issue on the GitHub repo.
+    </p>
   </body>
 
   <footer class="footer">
@@ -56,6 +68,16 @@
 
             <span id="copy-text">&copy; 2022</span>
             <span id="copy-text">Chico Demmenie</span>
+
+            <span id="copy-text">·</span>
+
+            <div id="copy-text">
+              <a href="/about">
+                <span>About</span>
+              </a>
+            </div>
+
+            <span id="copy-text">·</span>
 
             <div id="logo">
               <a
@@ -75,13 +97,13 @@
 
             <div id="logo">
               <a href="https://twitter.com/CDemmenie" target=”_blank”>
-                <img src="/twitterLogo.png" width="32" height="32"></img>
+                <img src="/assets/twitterLogo.png" width="32" height="32"></img>
               </a>
             </div>
 
             <div id="logo">
               <a href="https://www.buymeacoffee.com/Demmenie" target=”_blank”>
-                <img src="/bmc_icon.png" width="32" height="32"></img>
+                <img src="/assets/bmc_icon.png" width="32" height="32"></img>
               </a>
             </div>
 

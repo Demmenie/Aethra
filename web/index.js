@@ -97,23 +97,16 @@ const server = () => {
         })
     })
 
-    /*
+
     this.app.get('/about', (req, res) => {
-        console.log('User has connected to about');
-
-        // Get Data from JSON
-        let data = require('./content.json');
-        let text = data.about.text;
-        let link = data.about.link;
-
-        res.render('index', {letters: text, url: link})
+        res.sendFile(path.join(__dirname, "templates/about.html"))
     })
-    */
 
     // Sends a specific page when the search term isn't clean.
     this.app.get('/url_deny', (req, res) => {
         res.render('url_deny', {searchTerm: req.query.q})
     });
+
 
     // Returns any document within the 'assets' directory.
     this.app.get(`/assets/*`, (req, res) => {
