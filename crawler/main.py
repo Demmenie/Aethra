@@ -161,6 +161,7 @@ class main:
                                 id = str(tweet.id)
                                 author = status.author.screen_name
                                 text = status.text
+                                timestamp = time.time()
                                 uTime = datetime.datetime.timestamp(
                                     status.created_at)
 

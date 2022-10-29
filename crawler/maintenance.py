@@ -5,6 +5,8 @@
 import pymongo
 import json
 import copy
+from MongoAccess import mongoServe
+import videohash
 
 #Creating a class so that each function is contained and easily callable.
 class maintenance:
@@ -33,6 +35,8 @@ class maintenance:
         self.video = self.db.video
         self.allDocs = list(self.video.find({}).sort("index"))
         self.count = self.video.count_documents({})
+
+        #self.ms = mongoServe()
 
 
     def orderCheck(self):
@@ -116,11 +120,59 @@ class maintenance:
         return self.video.find({})
 
     
+    def refactor(self):
+
+        """Transfers the database from one collection to another, transforming
+            it in some way."""
+
+        for doc in self.allDocs:
+
+            for post in doc["postList"]:
+
+                try:
+                    self.vh((f"https://twitter.com/{post['author']}/status/"+
+                        post["id"]))
+
+                except videohash.exceptions.DownloadFailed as err:
+                    print(f"Exception occurred:\n {err}ignoring this post and continuing.")
+                    continue
+
+                class postCl:
+                    hashHex = self.videoHashHex
+                    hashDec = self.videoHashDec
+                    platform = "twitter"
+                    id = str(post["id"])
+                    author = post["author"]
+                    text = post["text"]
+                    timestamp = post["timestamp"]
+                    uTime = post["uploadTime"]
+
+                check = mongoServe().entryCheck(postCl.id, postCl.hashHex, postCl.hashDec)
+                
+                if check != None and check != "preexist":
+                    print(f"check: {check}")
+                    postCl.index = check["index"]
+                    mongoServe().addToEntry(postCl)
+
+                elif check == None:
+                    mongoServe().newEntry(postCl)
+
+
+    def vh(self, url):
+
+        """Hashes videos from a url"""
+
+        #Creating the hash and storing the Hex and Decimal
+        vHash = videohash.VideoHash(url=url, frame_interval=12)
+        self.videoHashHex = vHash.hash_hex
+        self.videoHashDec = int(self.videoHashHex, 16)
 
 
 if __name__ == "__main__":
-    if not maintenance().orderCheck():
-        maintenance().reOrder()
-        print(maintenance().orderCheck())
+    #if not maintenance().orderCheck():
+        #if input("reOrder? ") in ["y", "Y", "Ye", "ye", "yes", "Yes"]:
+            #maintenance().reOrder()
+            #print(maintenance().orderCheck())
 
     print(maintenance().duplicateCheck())
+    maintenance().refactor()

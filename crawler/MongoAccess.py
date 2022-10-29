@@ -39,7 +39,7 @@ class mongoServe:
         #Setting the class wide variables that connect to the database and the
         #MilVec collection.
         self.db = self.client.Aethra
-        self.video = self.db.video
+        self.video = self.db.video2
         self.backup = self.db.backup
 
 
@@ -60,7 +60,7 @@ class mongoServe:
         Returns:
             - Result:
                 - None (Means it isn't in the database),
-                - "Preexists" (Means that post has already been entered before)
+                - "preexist" (Means that post has already been entered before)
                 - Video object (Means that the video has been seen before but 
                     the post hasn't been entered yet.)
         """
@@ -239,7 +239,7 @@ class mongoServe:
                     "id": post.id,
                     "author": post.author,
                     "text": post.text,
-                    "timestamp": time.time(),
+                    "timestamp": post.timestamp,
                     "uploadTime": post.uTime
                     }]
                 }
@@ -284,7 +284,7 @@ class mongoServe:
                         "id": post.id,
                         "author": post.author,
                         "text": post.text,
-                        "timestamp": time.time(),
+                        "timestamp": post.timestamp,
                         "uploadTime": post.uTime}}})
 
                     print(f"[{datetime.datetime.now()}], Updated: {entry}")
