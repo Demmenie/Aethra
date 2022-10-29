@@ -69,7 +69,7 @@ class DBSearch:
 
 
     #---------------------------------------------------------------------------
-    def standard(self, url):
+    def standard(self, url, allDocs):
 
         """Searches the database in the standard way using binary search."""
 
@@ -81,6 +81,11 @@ class DBSearch:
             print(f"videoHash errored out with exception:\n{err}")
             return "download_failed"
 
+        responding = False
+        while not responding:
+            try:
+                #Finding the length of the list so far
+                length = len(allDocs)
 
         #Finding the length of the list so far
         length = self.video.count_documents({})
@@ -95,10 +100,8 @@ class DBSearch:
             halfFloor = math.floor(halfLength)
             halfCeil = math.ceil(halfLength)
 
-            floorDoc = self.video.find_one({"index": halfFloor},
-                projection={'_id': False})
-            ceilDoc = self.video.find_one({"index": halfCeil},
-                projection={'_id': False})
+            floorDoc = allDocs[halfFloor]
+            ceilDoc = allDocs[halfCeil]
 
             if floorDoc["hashHex"] == self.hashHex:
                 result = copy.copy(floorDoc)
@@ -123,12 +126,8 @@ class DBSearch:
         if result != None:
             returnList = []
             returnList.append(result)
-            returnList.append(self.video.find_one(
-                {"index": (result["index"] + 1)},
-                projection={'_id': False}))
-            returnList.append(self.video.find_one(
-                {"index": (result["index"] - 1)},
-                projection={'_id': False}))
+            returnList.append(allDocs[result["index"] + 1])
+            returnList.append(allDocs[result["index"] - 1])
 
             return json.dumps(returnList)
 
@@ -149,6 +148,16 @@ class DBSearch:
         cutPath = videoPath[:videoPath.find("temp_storage_dir")]
 
         shutil.rmtree(cutPath)
+
+
+    #---------------------------------------------------------------------------
+    def updateList(self):
+
+        """Updates the list of videos."""
+
+        response = list(self.video.find({}, 
+            projection={'_id': False}).sort("index"))
+        return response
 
 
 if __name__ == "__main__":

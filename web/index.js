@@ -25,6 +25,11 @@ DBSearch = search.DBSearch()
 //------------------------------------------------------------------------------
 // Initialise server variables
 const init = () => {
+    //Starting the getList function.
+    this.lastUpdate = 0
+    this.uList = []
+    getList.bind(this)();
+
     // initialise express app
     this.app = express();
     this.port = 5000;
@@ -69,7 +74,7 @@ const server = () => {
             if (clean) {
                 async function sSearch() {
                     return await python`search.DBSearch().standard(
-                        ${req.query.q}
+                        ${req.query.q}, ${this.uList}
                     )`;
                 }
                 sSearch().then(function(response) {
@@ -218,6 +223,24 @@ const isWord = () => {
     loop()
 }
 */
+
+const getList = () => {
+    // Retrieves the list of videos from the database every 15 mins
+    console.log("Starting getList() loop.")
+    loop = () => {
+        const time = (new Date().getTime() / 1000)
+        if (this.lastUpdate + 900 < time){
+            console.log("Updating allDocs / uList.")
+            async function refresh(){
+                this.uList = await python`search.DBSearch().updateList()`
+                this.lastUpdate = (new Date().getTime() / 1000)
+                console.log(`Updated uList at ${this.lastUpdate}`)
+            }
+            refresh(this);
+        }
+    }
+    loop();
+}
 
 /*
 //------------------------------------------------------------------------
