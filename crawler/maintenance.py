@@ -1,4 +1,4 @@
-#20/07/2022
+#29/10/2022
 #Chico Demmenie
 #Aethra/Scraper/Maintenance.py
 
@@ -134,7 +134,8 @@ class maintenance:
                         post["id"]))
 
                 except videohash.exceptions.DownloadFailed as err:
-                    print(f"Exception occurred:\n {err}ignoring this post and continuing.")
+                    print(f"Exception occurred:\n {err}"+
+                        "ignoring this post and continuing.")
                     continue
 
                 class postCl:
@@ -147,7 +148,8 @@ class maintenance:
                     timestamp = post["timestamp"]
                     uTime = post["uploadTime"]
 
-                check = mongoServe().entryCheck(postCl.id, postCl.hashHex, postCl.hashDec)
+                check = mongoServe().entryCheck(postCl.id, postCl.hashHex,
+                    postCl.hashDec)
                 
                 if check != None and check != "preexist":
                     print(f"check: {check}")

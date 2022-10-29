@@ -16,7 +16,7 @@ import importlib.util
 import sys
 spec = importlib.util.spec_from_file_location("search", ${sPath})
 search = importlib.util.module_from_spec(spec)
-sys.modules["DBSearch"] = search
+sys.modules["search"] = search
 spec.loader.exec_module(search)
 DBSearch = search.DBSearch()
 `
