@@ -26,16 +26,16 @@ DBSearch = search.DBSearch()
 // Initialise server variables
 const init = () => {
     //Starting the getList function.
-    this.lastUpdate = 0
-    this.uList = []
+    this.lastUpdate = 0;
+    this.uList = [];
     getList.bind(this)();
 
     // initialise express app
     this.app = express();
     this.port = 5000;
     this.app.set('view engine', 'ejs');
-    this.app.use(express.urlencoded({ extended: true }))
-    this.app.use(morgan('combined'))
+    this.app.use(express.urlencoded({ extended: true }));
+    this.app.use(morgan('combined'));
     server.bind(this)();
 
     console.log('User connected.');
@@ -51,15 +51,15 @@ const server = () => {
     // takes request, response
     this.app.get('/', (req, res) => {
         // Render page
-        res.sendFile(path.join(__dirname, "templates/index.html"))
+        res.sendFile(path.join(__dirname, "templates/index.html"));
     });
 
     //Listens listens for the search form to be returned.
     this.app.post('/q', (req, res) => {
-        const query = req.body.search
+        const query = req.body.search;
 
-        res.redirect(`/search?q=${query}`)
-    })
+        res.redirect(`/search?q=${query}`);
+    });
 
     // =================================
     //This calls the python search function and returns the completed view.
@@ -80,36 +80,36 @@ const server = () => {
                         ${req.query.q}, ${this.uList}
                     )`;
                 }
-                sSearch().then(function(response) {
+                sSearch.bind(this)().then(function(response) {
 
                     /*If the search returns 'null' then there's nothing to
                     show the user*/
                     if (response == null) {
-                        res.render('notFound', {searchTerm: req.query.q})
+                        res.render('notFound', {searchTerm: req.query.q});
                     } else if (response == "download_failed"){
-                        sendErr(req, res, 500)
+                        sendErr(req, res, 500);
                     } else {
                         res.render('search',
-                        {tweets: response, searchTerm: req.query.q})
+                        {tweets: response, searchTerm: req.query.q});
                     }
-                })
+                });
 
             } else {
-                res.redirect(`/url_deny?q=${req.query.q}`)
+                res.redirect(`/url_deny?q=${req.query.q}`);
             }
-        })
-    })
+        }.bind(this));
+    });
 
     // =================================
     // Returns the about page.
     this.app.get('/about', (req, res) => {
-        res.sendFile(path.join(__dirname, "templates/about.html"))
+        res.sendFile(path.join(__dirname, "templates/about.html"));
     })
 
     // =================================
     // Sends a specific page when the search term isn't clean.
     this.app.get('/url_deny', (req, res) => {
-        res.render('url_deny', {searchTerm: req.query.q})
+        res.render('url_deny', {searchTerm: req.query.q});
     });
 
     // =================================
@@ -120,9 +120,9 @@ const server = () => {
         // If the file doesn't exist return 404
         try {
             if (fs.existsSync(assetPath)) {
-                res.sendFile(assetPath)
+                res.sendFile(assetPath);
             } else {
-                send404(req, res, 404)
+                send404(req, res, 404);
             }
           } catch(err) {
             sendErr(req, res, 404);
@@ -136,9 +136,9 @@ const server = () => {
 
         try {
             if (fs.existsSync(assetPath)) {
-                res.sendFile(assetPath)
+                res.sendFile(assetPath);
             } else {
-                sendErr(req, res, 404)
+                sendErr(req, res, 404);
             }
           } catch(err) {
             sendErr(req, res, 404);
@@ -159,12 +159,12 @@ const server = () => {
         res.status(err);
 
         if (err == 404){
-            title = "404: Page doesn't exist"
-            text = "Whoops, Wrong page...maybe try a different one?"
+            title = "404: Page doesn't exist";
+            text = "Whoops, Wrong page...maybe try a different one?";
         } else if (err == 500){
-            title = "500: Server error"
+            title = "500: Server error";
             text = "Oops, something went wrong (It's us not you)..."+
-                "maybe try again? 🤷"
+                "maybe try again? 🤷";
         }
       
         // respond with html page rendered with the correct message
@@ -191,33 +191,36 @@ const server = () => {
 }
 
 
-// ------------------------------------------------------------------------------
+// -----------------------------------------------------------------------------
 const getList = () => {
     // Retrieves the list of videos from the database every 15 mins
-    console.log("Starting getList() loop.")
+    console.log("Starting getList() loop.");
 
     // Creating a recurring loop
-    loop = () => {
-        const time = (new Date().getTime() / 1000)
+    loop = async () => {
+        const time = (new Date().getTime() / 1000);
 
         // This should update every 15 mins.
-        if (this.lastUpdate + 900 < time){
-            console.log("Updating allDocs / uList.")
+        if ((this.lastUpdate + 900) < time){
+            console.log(`Updating allDocs / uList ${this.lastUpdate}`);
             
             // An async function that calls the python function to update
             // Returns this.uList and this.lastUpdate.
             async function refresh(){
-                this.uList = await python`search.DBSearch().updateList()`
-                this.lastUpdate = (new Date().getTime() / 1000)
-                console.log(`Updated uList at ${this.lastUpdate}`)
+                return await python`search.DBSearch().updateList()`;
             }
-            refresh(this);
+            refresh.bind(this)().then(function(uList){
+                this.uList = uList
+                console.log(`${time}: returned`)
+            }.bind(this))
 
+            this.lastUpdate = (new Date().getTime() / 1000);
+            console.log(`Updated uList at ${this.lastUpdate}`);
         }
+        // console.log(`${time - this.lastUpdate}:`, this.uList);
+        setTimeout(loop.bind(this), 1000)
     }
-    loop();
-
+    loop.bind(this)()
 }
-
 
 init();
