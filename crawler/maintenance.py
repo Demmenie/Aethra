@@ -7,6 +7,7 @@ import json
 import copy
 from MongoAccess import mongoServe
 import videohash
+import shutil
 
 #Creating a class so that each function is contained and easily callable.
 class maintenance:
@@ -168,6 +169,11 @@ class maintenance:
         vHash = videohash.VideoHash(url=url, frame_interval=12)
         self.videoHashHex = vHash.hash_hex
         self.videoHashDec = int(self.videoHashHex, 16)
+
+        videoPath = vHash.storage_path
+        cutPath = videoPath[:videoPath.find("temp_storage_dir")]
+
+        shutil.rmtree(cutPath)
 
 
 if __name__ == "__main__":
