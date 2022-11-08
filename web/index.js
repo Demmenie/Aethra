@@ -1,4 +1,4 @@
-/** 10/10/2022
+/** 07/11/2022
  *  Chico Demmenie
  *  Aethra/web/index.js
  */
@@ -67,7 +67,7 @@ const server = () => {
         /*Calling the cleaning function to make sure that the input is a
         link and not something else.*/
         async function cleaning() {
-            return await python`search.DBSearch().cleaning(
+            return await python`DBSearch.cleaning(
                 ${req.query.q}
             )`;
         }
@@ -76,7 +76,7 @@ const server = () => {
             //If the input is clean then we'll go look for it.
             if (clean) {
                 async function sSearch() {
-                    return await python`search.DBSearch().standard(
+                    return await python`DBSearch.standard(
                         ${req.query.q}, ${this.uList}
                     )`;
                 }
@@ -207,7 +207,7 @@ const getList = () => {
             // An async function that calls the python function to update
             // Returns this.uList and this.lastUpdate.
             async function refresh(){
-                return await python`search.DBSearch().updateList()`;
+                return await python`DBSearch.updateList()`;
             }
             refresh.bind(this)().then(function(uList){
                 this.uList = uList
