@@ -6,4 +6,3 @@
 /web/.gcloudignore
 /web/node_modules
 /.vscode
-web/data/keys.json
