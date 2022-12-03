@@ -51,14 +51,11 @@
 
     </div>
 
-    <div id="tweet-container"></div>
     <div>
       <script type="text/javascript" src="/static/widgets.js"></script>
       <script type="text/javascript" src="/static/organise.js"></script>
-      <script type="text/javascript">
-        organise(<%- locals.tweets %>);
-      </script>
     </div>
+    <div id="tweet-container"><%- locals.page %></div>
   </body>
 
   <footer class="footer">

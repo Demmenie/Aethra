@@ -1,0 +1,20 @@
+{
+    "name": "Aethra",
+    "description": "A reverse video search engine. Search by using a url to a video.",
+    "icons": [
+        {
+            "src": "assets/favicon.ico",
+            "sizes": "16x16",
+            "type": "image/ico"
+        },
+        {
+            "src": "assets/Icon.png",
+            "sizes": "256x256",
+            "type": "image/png"
+        }
+    ],
+    "start_url": "/",
+    "display": "fullscreen",
+    "theme_color": "#272b33",
+    "background_color": "#0a0c10"
+}

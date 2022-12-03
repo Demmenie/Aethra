@@ -1,16 +1,18 @@
-/** 07/11/2022
+/** 22/11/2022
  *  Chico Demmenie
  *  Aethra/web/index.js
  */
+
 const express = require('express');
 const path = require('path');
 const fs = require('fs');
 const morgan = require('morgan');
 const pb = require('python-bridge');
 const python = pb();
+const pageRender = require('./render');
 
 //Getting the search class from python
-const sPath = path.join(__dirname, 'search.py')
+const sPath = path.join(__dirname, 'search.py');
 python.ex`
 import importlib.util
 import sys
@@ -46,6 +48,7 @@ const init = () => {
 // Server runtime function
 const server = () => {
 
+    
     // =================================
     // listens for activity on root page
     // takes request, response
@@ -80,24 +83,29 @@ const server = () => {
                         ${req.query.q}, ${this.uList}
                     )`;
                 }
-                sSearch.bind(this)().then(function(response) {
+                sSearch.bind(this)().then(function(sResponse) {
 
                     /*If the search returns 'null' then there's nothing to
                     show the user*/
-                    if (response == null) {
+                    if (sResponse == null) {
                         res.render('notFound', {searchTerm: req.query.q});
-                    } else if (response == "download_failed"){
+                    } else if (sResponse == "download_failed"){
                         sendErr(req, res, 500);
                     } else {
+                        let page = pageRender(sResponse).toString();
+                        page = page.replaceAll(",", "");
+                        page = page.replaceAll("**", ",");
+                        console.log(page);
                         res.render('search',
-                        {tweets: response, searchTerm: req.query.q});
+                        {page: page,
+                            searchTerm: req.query.q});
                     }
-                });
+                }.bind(pageRender));
 
             } else {
                 res.redirect(`/url_deny?q=${req.query.q}`);
             }
-        }.bind(this));
+        }.bind(this, pageRender));
     });
 
     // =================================
