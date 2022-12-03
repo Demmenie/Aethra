@@ -1,15 +1,17 @@
-#29/10/2022
+#08/11/2022
 #Chico Demmenie
 #Aethra/web/search.py
 
 #Importing dependencies
 import pymongo
 from pymongo import MongoClient
+from operator import itemgetter
 import videohash
 import shutil
 import json
 import copy
 import math
+import time
 
 class DBSearch:
 
@@ -59,7 +61,8 @@ class DBSearch:
         else:
             for char in list(query):
 
-                if char in ["{", "}", "|", "\\", "^", "~", "[", "]", "`"]:
+                if char not in list("""ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmno
+                    pqrstuvwxyz0123456789-._~:/?#[]@!$&'()*+,;="""):
 
                     clean = False
                     break
@@ -72,6 +75,7 @@ class DBSearch:
 
         """Searches the database in the standard way using binary search."""
 
+        start = time.time()
         #Hashing the video
         try:
             self.videoHash(url)
@@ -80,6 +84,8 @@ class DBSearch:
             print(f"videoHash errored out with exception:\n{err}")
             return "download_failed"
 
+        print(f"Hashing in {time.time() - start}")
+        start = time.time()
         #Finding the length of the list so far
         length = len(allDocs)
 
@@ -107,7 +113,7 @@ class DBSearch:
             elif (int(floorDoc["hashDec"]) < self.hashDec and
                 int(ceilDoc["hashDec"]) > self.hashDec):
 
-                index = ceilDoc["index"]
+                result = copy.copy(floorDoc)
                 searching = False
 
             elif int(ceilDoc["hashDec"]) < self.hashDec:
@@ -116,11 +122,21 @@ class DBSearch:
             elif int(floorDoc["hashDec"]) > self.hashDec:
                 halfLength = halfLength - modifyLength
 
+        print(f"Search in {time.time() - start}")
+        start = time.time()
         if result != None:
             returnList = []
             returnList.append(result)
-            returnList.append(allDocs[result["index"] + 1])
-            returnList.append(allDocs[result["index"] - 1])
+
+            for i in range(5):
+                returnList.append(allDocs[result["index"] + i])
+                returnList.append(allDocs[result["index"] - i])
+
+            for index, video in enumerate(returnList):
+                video["sDiff"] = abs(int(video["hashDec"]) - self.hashDec)
+
+            returnList = sorted(returnList, key=itemgetter('sDiff')) 
+            print(f"Sorting in {time.time() - start}")
 
             return json.dumps(returnList)
 
@@ -155,4 +171,4 @@ class DBSearch:
 
 if __name__ == "__main__":
 
-    print(DBSearch().standard(""))
+    print(DBSearch().cleaning(""))
