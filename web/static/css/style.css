@@ -6,7 +6,6 @@ html,
 body {
   height: 100%;
   min-height: 100%;
-  overflow-y: scroll;
 }
 
 body {
@@ -97,7 +96,7 @@ button {
     top: 110%;
     left: 0px;
     right: 0px;
-    width: 1200px;
+    width: 100%;
     padding: 20px;
     margin: -83px auto 0 auto;
     background-color: #0a0c10;
@@ -128,7 +127,7 @@ button {
 @media (hover: none), (hover: on-demand) {
   #cover {
     position: absolute;
-    top: 100%;
+    top: 110%;
     left: -100px;
     right: 0px;
     width: 150%;
@@ -141,11 +140,12 @@ button {
   }
 
   #text{
-    position: relative;
+    position: absolute;
     color: #fff;
     font-size: 20px;
+    margin: auto;
     text-shadow: 1px 1px black, 2px 2px black, 3px 3px black, 4px 4px black;
-    top: 120px;
+    top: 115%;
   }
 
   .logo{
@@ -158,6 +158,7 @@ button {
     color: #fff;
     font-size: 20px;
     text-shadow: 1px 1px black, 2px 2px black, 3px 3px black, 4px 4px black;
+    transform: scale(0.7);
     bottom: 0px;
     padding: 10px;
   }
