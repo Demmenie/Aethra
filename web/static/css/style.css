@@ -93,7 +93,7 @@ button {
 @media (hover: hover){
   #cover {
     position: absolute;
-    top: 110%;
+    top: 105%;
     left: 0px;
     right: 0px;
     width: 100%;

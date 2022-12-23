@@ -21,6 +21,7 @@ class DBSearch:
 
         """Class initialisation and database connection."""
 
+        #Opening a connection with the MongoDB Atlas Database
         keys = json.loads(open("data/keys.json",
             "r").read())
 
@@ -40,7 +41,7 @@ class DBSearch:
         #Setting the class wide variables that connect to the database and the
         #video collection.
         self.db = self.client.Aethra
-        self.video = self.db.video2
+        self.video = self.db.video
 
 
     #---------------------------------------------------------------------------
@@ -49,11 +50,13 @@ class DBSearch:
         """Cleans up and checks that the query is correct."""
 
         clean = True
+        #First looking to see if it's a website.
         if (query.find("https://", 0, 8) != 0 and
             query.find("http://", 0, 8) != 0):
 
             clean = False
 
+        #Then looking for character that don't belong in a URL.
         elif query.find(".", 8) < 0 or query.find(".", 8) < 0:  
 
             clean = False
@@ -67,6 +70,7 @@ class DBSearch:
                     clean = False
                     break
 
+        #Returning True or False for if the URL is clean or not.
         return clean
 
 
@@ -80,15 +84,18 @@ class DBSearch:
         try:
             self.videoHash(url)
 
+        #Printing the error if one occurs 
         except videohash.exceptions.DownloadFailed as err:
             print(f"videoHash errored out with exception:\n{err}")
             return "download_failed"
 
         print(f"Hashing in {time.time() - start}")
         start = time.time()
+
         #Finding the length of the list so far
         length = len(allDocs)
 
+        #Setting up variables for the binary search.
         result = None
         halfLength = length / 2
         modifyLength = copy.copy(halfLength)
@@ -102,6 +109,8 @@ class DBSearch:
             floorDoc = allDocs[halfFloor]
             ceilDoc = allDocs[halfCeil]
 
+            #If one of the selected documents is the correct one, then we don't
+            #Need top continue.
             if floorDoc["hashHex"] == self.hashHex:
                 result = copy.copy(floorDoc)
                 searching = False
@@ -110,12 +119,14 @@ class DBSearch:
                 result = copy.copy(ceilDoc)
                 searching = False
 
+            #If the result doesn't exist, we just return the closest document.
             elif (int(floorDoc["hashDec"]) < self.hashDec and
                 int(ceilDoc["hashDec"]) > self.hashDec):
 
                 result = copy.copy(floorDoc)
                 searching = False
 
+            #If we haven't found it yet, we keep dividing the list.
             elif int(ceilDoc["hashDec"]) < self.hashDec:
                 halfLength = halfLength + modifyLength
 
@@ -124,6 +135,9 @@ class DBSearch:
 
         print(f"Search in {time.time() - start}")
         start = time.time()
+
+        #Assuming a result is found; a list of 10 videos which are similar is
+        #shown to the user.
         if result != None:
             returnList = []
             returnList.append(result)
@@ -149,10 +163,12 @@ class DBSearch:
 
         """Hashes videos for storage."""
 
-        vHash = videohash.VideoHash(url=url, frame_interval=12)
+        #Creating hash, setting variables
+        vHash = videohash.VideoHash(url=url)
         self.hashHex = vHash.hash_hex
         self.hashDec = int(self.hashHex, 16)
 
+        #After the hash has been found, the temp storage is cleared.
         videoPath = vHash.storage_path
         cutPath = videoPath[:videoPath.find("temp_storage_dir")]
 

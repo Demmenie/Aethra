@@ -130,7 +130,7 @@ const server = () => {
             if (fs.existsSync(assetPath)) {
                 res.sendFile(assetPath);
             } else {
-                send404(req, res, 404);
+                sendErr(req, res, 404);
             }
           } catch(err) {
             sendErr(req, res, 404);
@@ -151,6 +151,28 @@ const server = () => {
           } catch(err) {
             sendErr(req, res, 404);
           }
+    });
+
+    // =================================
+    // These are some extra routes for specific assets.
+    this.app.get(`/aethra.webmanifest`, (req, res) => {
+        const assetPath = path.join(__dirname, "/aethra.webmanifest");
+        res.sendFile(assetPath);
+    });
+
+    this.app.get(`/serviceWorker.js`, (req, res) => {
+        const assetPath = path.join(__dirname, "serviceWorker.js");
+        res.sendFile(assetPath);
+    });
+
+    this.app.get(`/offline`, (req, res) => {
+        const assetPath = path.join(__dirname, "templates/offline.html");
+        res.sendFile(assetPath);
+    });
+
+    this.app.get(`/favicon.ico`, (req, res) => {
+        const assetPath = path.join(__dirname, "assets/favicon.ico");
+        res.sendFile(assetPath);
     });
 
     // =================================
