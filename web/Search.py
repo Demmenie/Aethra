@@ -140,9 +140,8 @@ class DBSearch:
         #shown to the user.
         if result != None:
             returnList = []
-            returnList.append(result)
 
-            for i in range(5):
+            for i in range(1, 6):
                 returnList.append(allDocs[result["index"] + i])
                 returnList.append(allDocs[result["index"] - i])
 

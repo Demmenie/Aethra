@@ -95,7 +95,7 @@ const server = () => {
                         let page = pageRender(sResponse).toString();
                         page = page.replaceAll(",", "");
                         page = page.replaceAll("**", ",");
-                        console.log(page);
+                        
                         res.render('search',
                         {page: page,
                             searchTerm: req.query.q});
