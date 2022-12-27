@@ -27,7 +27,7 @@ mutagen==1.45.1
 numpy==1.22.3
 oauthlib==3.2.1
 packaging==21.3
-Pillow==9.1.1
+Pillow==9.3.0
 pluggy==1.0.0
 praw==7.5.0
 prawcore==2.3.0
