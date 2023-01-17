@@ -8,6 +8,7 @@ import copy
 from MongoAccess import mongoServe
 import videohash
 import shutil
+import datetime
 
 #Creating a class so that each function is contained and easily callable.
 class maintenance:
@@ -18,7 +19,9 @@ class maintenance:
 
         """Initialises the class and gets mongoDB client"""
 
-        keys = json.loads(open("../data/keys.json", "r").read())
+        keyFile = open("../data/keys.json", "r")
+        keys = json.loads(keyFile.read())
+        keyFile.close()
 
         mongoPass = keys["mongoPass"]
         conn = ''.join(f"mongodb+srv://Aethra:{mongoPass}"+
@@ -126,7 +129,9 @@ class maintenance:
         """Transfers the database from one collection to another, transforming
             it in some way."""
 
-        for doc in self.allDocs:
+        
+
+        for doc in self.allDocs[3154:]:
 
             for post in doc["postList"]:
 
@@ -138,6 +143,12 @@ class maintenance:
                     print(f"Exception occurred:\n {err}"+
                         "ignoring this post and continuing.")
                     continue
+                
+                except videohash.exceptions.FFmpegFailedToExtractFrames as err:
+                    print(f"[{datetime.datetime.now()}] Caught: {err},",
+                        "continuing.")
+                    continue
+
 
                 class postCl:
                     hashHex = self.videoHashHex
@@ -170,10 +181,15 @@ class maintenance:
         self.videoHashHex = vHash.hash_hex
         self.videoHashDec = int(self.videoHashHex, 16)
 
+        #print(self.videoHashHex, self.videoHashDec)
+
         videoPath = vHash.storage_path
         cutPath = videoPath[:videoPath.find("temp_storage_dir")]
 
-        shutil.rmtree(cutPath)
+        try:
+            shutil.rmtree(cutPath)
+        except OSError as e:
+            print("Error: %s - %s." % (e.filename, e.strerror))
 
 
 if __name__ == "__main__":
@@ -184,3 +200,4 @@ if __name__ == "__main__":
 
     print(maintenance().duplicateCheck())
     maintenance().refactor()
+    #maintenance().vh("https://twitter.com/aldin_aba/status/1570102341189177346")

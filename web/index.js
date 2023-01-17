@@ -66,24 +66,27 @@ const server = () => {
 
     // =================================
     //This calls the python search function and returns the completed view.
-    this.app.get('/search', (req, res) => {
+    this.app.get('/search', async (req, res) => {
         /*Calling the cleaning function to make sure that the input is a
         link and not something else.*/
-        async function cleaning() {
-            return await python`DBSearch.cleaning(
+        const cleaning = new Promise(async (resolve) => {
+            resolve(await python`DBSearch.cleaning(
                 ${req.query.q}
-            )`;
-        }
+            )`);
+        });
 
-        cleaning().then(function(clean){
+        this.clean = await cleaning;
+        cleaning.then(function(){
             //If the input is clean then we'll go look for it.
-            if (clean) {
+            
+            if (this.clean == true) {
                 async function sSearch() {
                     return await python`DBSearch.standard(
                         ${req.query.q}, ${this.uList}
                     )`;
                 }
                 sSearch.bind(this)().then(function(sResponse) {
+                    console.log(sResponse)
 
                     /*If the search returns 'null' then there's nothing to
                     show the user*/
