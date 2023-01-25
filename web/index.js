@@ -34,7 +34,7 @@ const init = () => {
 
     // initialise express app
     this.app = express();
-    this.port = 5000;
+    this.port = process.env.PORT || 5000;
     this.app.set('view engine', 'ejs');
     this.app.use(express.urlencoded({ extended: true }));
     this.app.use(morgan('combined'));
