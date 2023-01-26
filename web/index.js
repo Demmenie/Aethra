@@ -10,6 +10,7 @@ const morgan = require('morgan');
 const pb = require('python-bridge');
 const python = pb();
 const pageRender = require('./render');
+require('dotenv').config({path: './config.env'});
 
 //Getting the search class from python
 const sPath = path.join(__dirname, 'search.py');
@@ -34,12 +35,10 @@ const init = () => {
 
     // initialise express app
     this.app = express();
-    this.port = process.env.PORT || 5000;
     this.app.set('view engine', 'ejs');
     this.app.use(express.urlencoded({ extended: true }));
     this.app.use(morgan('combined'));
     server.bind(this)();
-
     console.log('User connected.');
 }
 
@@ -218,8 +217,8 @@ const server = () => {
     }
     
     // Start listening on the standard port
-    this.app.listen(this.port, () => {
-        console.log(`Server Listening on port ${this.port}`);
+    this.app.listen(process.env.PORT, () => {
+        console.log(`Server Listening on port ${process.env.PORT}`);
     });
 }
 
