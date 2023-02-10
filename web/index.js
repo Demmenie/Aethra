@@ -10,6 +10,7 @@ const morgan = require('morgan');
 const pb = require('python-bridge');
 const python = pb();
 const pageRender = require('./render');
+require('dotenv').config({path: './config.env'});
 
 //Getting the search class from python
 const sPath = path.join(__dirname, 'search.py');
@@ -34,12 +35,10 @@ const init = () => {
 
     // initialise express app
     this.app = express();
-    this.port = 5000;
     this.app.set('view engine', 'ejs');
     this.app.use(express.urlencoded({ extended: true }));
     this.app.use(morgan('combined'));
     server.bind(this)();
-
     console.log('User connected.');
 }
 
@@ -66,24 +65,27 @@ const server = () => {
 
     // =================================
     //This calls the python search function and returns the completed view.
-    this.app.get('/search', (req, res) => {
+    this.app.get('/search', async (req, res) => {
         /*Calling the cleaning function to make sure that the input is a
         link and not something else.*/
-        async function cleaning() {
-            return await python`DBSearch.cleaning(
+        const cleaning = new Promise(async (resolve) => {
+            resolve(await python`DBSearch.cleaning(
                 ${req.query.q}
-            )`;
-        }
+            )`);
+        });
 
-        cleaning().then(function(clean){
+        this.clean = await cleaning;
+        cleaning.then(function(){
             //If the input is clean then we'll go look for it.
-            if (clean) {
+            
+            if (this.clean == true) {
                 async function sSearch() {
                     return await python`DBSearch.standard(
                         ${req.query.q}, ${this.uList}
                     )`;
                 }
                 sSearch.bind(this)().then(function(sResponse) {
+                    console.log(sResponse)
 
                     /*If the search returns 'null' then there's nothing to
                     show the user*/
@@ -95,7 +97,7 @@ const server = () => {
                         let page = pageRender(sResponse).toString();
                         page = page.replaceAll(",", "");
                         page = page.replaceAll("**", ",");
-                        console.log(page);
+                        
                         res.render('search',
                         {page: page,
                             searchTerm: req.query.q});
@@ -215,8 +217,8 @@ const server = () => {
     }
     
     // Start listening on the standard port
-    this.app.listen(this.port, () => {
-        console.log(`Server Listening on port ${this.port}`);
+    this.app.listen(process.env.PORT, () => {
+        console.log(`Server Listening on port ${process.env.PORT}`);
     });
 }
 

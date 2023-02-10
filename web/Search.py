@@ -41,7 +41,7 @@ class DBSearch:
         #Setting the class wide variables that connect to the database and the
         #video collection.
         self.db = self.client.Aethra
-        self.video = self.db.video
+        self.video = self.db.video2
 
 
     #---------------------------------------------------------------------------
@@ -140,9 +140,8 @@ class DBSearch:
         #shown to the user.
         if result != None:
             returnList = []
-            returnList.append(result)
 
-            for i in range(5):
+            for i in range(1, 6):
                 returnList.append(allDocs[result["index"] + i])
                 returnList.append(allDocs[result["index"] - i])
 
@@ -164,7 +163,7 @@ class DBSearch:
         """Hashes videos for storage."""
 
         #Creating hash, setting variables
-        vHash = videohash.VideoHash(url=url)
+        vHash = videohash.VideoHash(url=url, frame_interval=12)
         self.hashHex = vHash.hash_hex
         self.hashDec = int(self.hashHex, 16)
 
@@ -187,4 +186,4 @@ class DBSearch:
 
 if __name__ == "__main__":
 
-    print(DBSearch().cleaning(""))
+    print(DBSearch().cleaning("Hello"))

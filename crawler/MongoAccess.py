@@ -21,7 +21,9 @@ class mongoServe:
 
         """Initialises the class and gets mongoDB client"""
 
-        keys = json.loads(open("../data/keys.json", "r").read())
+        keyFile = open("../data/keys.json", "r")
+        keys = json.loads(keyFile.read())
+        keyFile.close()
 
         mongoPass = keys["mongoPass"]
         mongoCluster = keys["mongoCluster"]
