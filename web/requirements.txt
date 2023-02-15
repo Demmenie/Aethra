@@ -6,7 +6,7 @@ certifi==2022.12.7
 charset-normalizer==2.0.10
 click==8.0.3
 colorama==0.4.4
-Django==4.0.7
+Django==4.1.7
 dnspython==2.2.0
 ffmpeg==1.4
 ffmpeg-python==0.2.0
