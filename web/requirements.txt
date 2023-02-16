@@ -54,6 +54,6 @@ urllib3==1.26.8
 videohash==2.1.9
 websocket-client==1.2.3
 websockets==10.2
-Werkzeug==2.0.2
+Werkzeug==2.2.3
 youtube-dl==2021.12.17
 yt-dlp==2022.7.18
