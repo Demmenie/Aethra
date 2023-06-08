@@ -22,7 +22,7 @@ itsdangerous==2.0.1
 Jinja2==3.0.2
 log3==0.1.7
 MarkupSafe==2.0.1
-mpmath==1.2.1
+mpmath==1.3.0
 mutagen==1.45.1
 numpy==1.22.3
 oauthlib==3.2.2
