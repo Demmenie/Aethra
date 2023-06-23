@@ -5,6 +5,8 @@
 #Importing dependencies
 import pymongo
 import requests
+import urllib3
+import http
 import json
 import time
 import datetime
@@ -78,6 +80,10 @@ class mongoServe:
                 length = len(self.allDocs)
                 responding = True
 
+            except pymongo.errors.NetworkTimeout as err:
+                print(f"[{datetime.datetime.now()}] Caught: {err}, sleeping 60")
+                time.sleep(60)
+
             except pymongo.errors.ServerSelectionTimeoutError as err:
                 print(print(f"[{datetime.datetime.now()}] Caught: {err}",
                     "sleeping 60 secs."))
@@ -88,7 +94,17 @@ class mongoServe:
                     "sleeping 60 secs."))
                 time.sleep(60)
 
-            except requests.exceptions.ConnectionError as err:
+            except urllib3.exceptions.ProtocolError as err:
+                print(print(f"[{datetime.datetime.now()}] Caught: {err}",
+                    "sleeping 60 secs."))
+                time.sleep(60)
+
+            except http.client.RemoteDisconnected as err:
+                print(print(f"[{datetime.datetime.now()}] Caught: {err}",
+                    "sleeping 60 secs."))
+                time.sleep(60)
+
+            except ConnectionResetError as err:
                 print(print(f"[{datetime.datetime.now()}] Caught: {err}",
                     "sleeping 60 secs."))
                 time.sleep(60)
@@ -264,6 +280,21 @@ class mongoServe:
                     "sleeping 60 secs."))
                 time.sleep(60)
 
+            except urllib3.exceptions.ProtocolError as err:
+                print(print(f"[{datetime.datetime.now()}] Caught: {err}",
+                    "sleeping 60 secs."))
+                time.sleep(60)
+
+            except http.client.RemoteDisconnected as err:
+                print(print(f"[{datetime.datetime.now()}] Caught: {err}",
+                    "sleeping 60 secs."))
+                time.sleep(60)
+
+            except ConnectionResetError as err:
+                print(print(f"[{datetime.datetime.now()}] Caught: {err}",
+                    "sleeping 60 secs."))
+                time.sleep(60)
+
 
     #---------------------------------------------------------------------------
     def addToEntry(self, post):
@@ -306,6 +337,21 @@ class mongoServe:
                     "sleeping 60 secs."))
                 time.sleep(60)
 
+            except urllib3.exceptions.ProtocolError as err:
+                print(print(f"[{datetime.datetime.now()}] Caught: {err}",
+                    "sleeping 60 secs."))
+                time.sleep(60)
+
+            except http.client.RemoteDisconnected as err:
+                print(print(f"[{datetime.datetime.now()}] Caught: {err}",
+                    "sleeping 60 secs."))
+                time.sleep(60)
+
+            except ConnectionResetError as err:
+                print(print(f"[{datetime.datetime.now()}] Caught: {err}",
+                    "sleeping 60 secs."))
+                time.sleep(60)
+
 
     #---------------------------------------------------------------------------
     def fullBackup(self):
@@ -342,6 +388,21 @@ class mongoServe:
                 time.sleep(60)
 
             except requests.exceptions.ConnectionError as err:
+                print(print(f"[{datetime.datetime.now()}] Caught: {err}",
+                    "sleeping 60 secs."))
+                time.sleep(60)
+
+            except urllib3.exceptions.ProtocolError as err:
+                print(print(f"[{datetime.datetime.now()}] Caught: {err}",
+                    "sleeping 60 secs."))
+                time.sleep(60)
+
+            except http.client.RemoteDisconnected as err:
+                print(print(f"[{datetime.datetime.now()}] Caught: {err}",
+                    "sleeping 60 secs."))
+                time.sleep(60)
+
+            except ConnectionResetError as err:
                 print(print(f"[{datetime.datetime.now()}] Caught: {err}",
                     "sleeping 60 secs."))
                 time.sleep(60)
