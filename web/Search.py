@@ -1,10 +1,11 @@
-#09/09/2022
+#08/11/2022
 #Chico Demmenie
 #Aethra/web/search.py
 
 #Importing dependencies
 import pymongo
 from pymongo import MongoClient
+from operator import itemgetter
 import videohash
 import shutil
 import json
@@ -20,6 +21,7 @@ class DBSearch:
 
         """Class initialisation and database connection."""
 
+        #Opening a connection with the MongoDB Atlas Database
         keys = json.loads(open("data/keys.json",
             "r").read())
 
@@ -27,7 +29,8 @@ class DBSearch:
         mongoCluster = keys["mongoCluster"]
         mongoAccount = keys["mongoAccount"]
         conn = ''.join(f"mongodb+srv://{mongoAccount}:{mongoPass}"+
-            f"{mongoCluster}.mongodb.net/{mongoAccount}?retryWrites=true&w=majority")
+            f"{mongoCluster}.mongodb.net/{mongoAccount}?retryWrites=true&w="+
+            "majority")
 
         #Setting a 5-second connection timeout so that we're not pinging the
         #server endlessly
@@ -36,9 +39,9 @@ class DBSearch:
             serverSelectionTimeoutMS=5000)
 
         #Setting the class wide variables that connect to the database and the
-        #MilVec collection.
+        #video collection.
         self.db = self.client.Aethra
-        self.video = self.db.video
+        self.video = self.db.video2
 
 
     #---------------------------------------------------------------------------
@@ -47,119 +50,140 @@ class DBSearch:
         """Cleans up and checks that the query is correct."""
 
         clean = True
+        #First looking to see if it's a website.
         if (query.find("https://", 0, 8) != 0 and
             query.find("http://", 0, 8) != 0):
 
             clean = False
-            print("http")
 
-        elif query.find(".", 8) < 0 or query.find(".", 8) < 0:
+        #Then looking for character that don't belong in a URL.
+        elif query.find(".", 8) < 0 or query.find(".", 8) < 0:  
 
             clean = False
-            print("./")
 
         else:
             for char in list(query):
 
-                if char in ["{", "}", "|", "\\", "^", "~", "[", "]", "`"]:
+                if char not in list("""ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmno
+                    pqrstuvwxyz0123456789-._~:/?#[]@!$&'()*+,;="""):
 
-                    print("char")
                     clean = False
                     break
 
+        #Returning True or False for if the URL is clean or not.
         return clean
 
 
     #---------------------------------------------------------------------------
-    def standard(self, url):
+    def standard(self, url, allDocs):
 
         """Searches the database in the standard way using binary search."""
 
+        start = time.time()
         #Hashing the video
         try:
             self.videoHash(url)
 
-        except videohash.exceptions.DownloadFailed:
-            return "Download failed"
+        #Printing the error if one occurs 
+        except videohash.exceptions.DownloadFailed as err:
+            print(f"videoHash errored out with exception:\n{err}")
+            return "download_failed", err
 
-        responding = False
-        while not responding:
-            try:
-                #Finding the length of the list so far
-                length = self.video.count_documents({})
+        print(f"Hashing in {time.time() - start}")
+        start = time.time()
 
-                result = None
-                halfLength = length / 2
-                modifyLength = copy.copy(halfLength)
-                searching = True
-                while searching:
+        #Finding the length of the list so far
+        length = len(allDocs)
 
-                    modifyLength = modifyLength / 2
-                    halfFloor = math.floor(halfLength)
-                    halfCeil = math.ceil(halfLength)
+        #Setting up variables for the binary search.
+        result = None
+        halfLength = length / 2
+        modifyLength = copy.copy(halfLength)
+        searching = True
+        while searching:
 
-                    floorDoc = self.video.find_one({"index": halfFloor},
-                        projection={'_id': False})
-                    ceilDoc = self.video.find_one({"index": halfCeil},
-                        projection={'_id': False})
+            modifyLength = modifyLength / 2
+            halfFloor = math.floor(halfLength)
+            halfCeil = math.ceil(halfLength)
 
-                    if floorDoc["hashHex"] == self.hashHex:
-                        result = copy.copy(floorDoc)
-                        searching = False
+            floorDoc = allDocs[halfFloor]
+            ceilDoc = allDocs[halfCeil]
 
-                    elif ceilDoc["hashHex"] == self.hashHex:
-                        result = copy.copy(ceilDoc)
-                        searching = False
+            #If one of the selected documents is the correct one, then we don't
+            #Need top continue.
+            if floorDoc["hashHex"] == self.hashHex:
+                result = copy.copy(floorDoc)
+                searching = False
 
-                    elif (int(floorDoc["hashDec"]) < self.hashDec and
-                        int(ceilDoc["hashDec"]) > self.hashDec):
+            elif ceilDoc["hashHex"] == self.hashHex:
+                result = copy.copy(ceilDoc)
+                searching = False
 
-                        index = ceilDoc["index"]
-                        searching = False
+            #If the result doesn't exist, we just return the closest document.
+            elif (int(floorDoc["hashDec"]) < self.hashDec and
+                int(ceilDoc["hashDec"]) > self.hashDec):
 
-                    elif int(ceilDoc["hashDec"]) < self.hashDec:
-                        halfLength = halfLength + modifyLength
+                result = copy.copy(floorDoc)
+                searching = False
 
-                    elif int(floorDoc["hashDec"]) > self.hashDec:
-                        halfLength = halfLength - modifyLength
+            #If we haven't found it yet, we keep dividing the list.
+            elif int(ceilDoc["hashDec"]) < self.hashDec:
+                halfLength = halfLength + modifyLength
 
-                if result != None:
-                    returnList = []
-                    returnList.append(result)
-                    returnList.append(self.video.find_one({"index": (result["index"] + 1)},
-                        projection={'_id': False}))
-                    returnList.append(self.video.find_one({"index": (result["index"] - 1)},
-                        projection={'_id': False}))
+            elif int(floorDoc["hashDec"]) > self.hashDec:
+                halfLength = halfLength - modifyLength
 
-                    return json.dumps(returnList)
+        print(f"Search in {time.time() - start}")
+        start = time.time()
 
-                else:
-                    return result
+        #Assuming a result is found; a list of 10 videos which are similar is
+        #shown to the user.
+        if result != None:
+            returnList = []
 
-                responding = True
+            for i in range(1, 6):
+                returnList.append(allDocs[result["index"] + i])
+                returnList.append(allDocs[result["index"] - i])
 
-            except pymongo.errors.NetworkTimeout:
-                time.sleep(60)
+            for index, video in enumerate(returnList):
+                video["sDiff"] = abs(int(video["hashDec"]) - self.hashDec)
 
-            except pymongo.errors.ServerSelectionTimeoutError:
-                time.sleep(60)
+            returnList = sorted(returnList, key=itemgetter('sDiff')) 
+            print(f"Sorting in {time.time() - start}")
 
+            return json.dumps(returnList)
 
+        else:
+            return result
+
+    
     #---------------------------------------------------------------------------
     def videoHash(self, url):
 
         """Hashes videos for storage."""
 
-        vHash = videohash.VideoHash(url=url)
+        #Creating hash, setting variables
+        vHash = videohash.VideoHash(url=url, frame_interval=12)
         self.hashHex = vHash.hash_hex
         self.hashDec = int(self.hashHex, 16)
 
+        #After the hash has been found, the temp storage is cleared.
         videoPath = vHash.storage_path
         cutPath = videoPath[:videoPath.find("temp_storage_dir")]
 
         shutil.rmtree(cutPath)
 
 
+    #---------------------------------------------------------------------------
+    def updateList(self):
+
+        """Updates the list of videos."""
+
+        response = list(self.video.find({}, 
+            projection={'_id': False}).sort("index"))
+        return response
+
+
 if __name__ == "__main__":
 
-    print(DBSearch().standard(""))
+    print(DBSearch().cleaning("Hello"))

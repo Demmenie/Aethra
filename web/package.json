@@ -1,0 +1,28 @@
+{
+    "name": "aethra",
+    "version": "0.3",
+    "description": "A reverse video search engine.",
+    "main": "index.js",
+    "scripts": {
+        "start": "node index.js",
+        "install": "set DEBUG=app"
+    },
+    "author": "Chico Demmenie",
+    "dependencies": {
+        "chalk": "^4.1.2",
+        "debug": "^4.1.1",
+        "express": "^4.18.1",
+        "morgan": "^1.10.0",
+        "nodemon": "^2.0.20",
+        "python-bridge": "^1.1.0",
+        "dotenv": "^16.0.3"
+    },
+    "devDependencies": {
+        "ejs": "^3.1.8",
+        "i": "^0.3.7"
+    },
+    "engines": {
+        "node": ">=18.0.0",
+        "npm": ">=8.0.0"
+    }
+}

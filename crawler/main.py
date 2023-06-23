@@ -204,6 +204,7 @@ class main:
                                 id = str(tweet.id)
                                 author = status.author.screen_name
                                 text = status.text
+                                timestamp = time.time()
                                 uTime = datetime.datetime.timestamp(
                                     status.created_at)
 
@@ -236,7 +237,7 @@ class main:
         """
 
         #Creating the hash and storing the Hex and Decimal
-        vHash = videohash.VideoHash(url=url)
+        vHash = videohash.VideoHash(url=url, frame_interval=12)
         self.videoHashHex = vHash.hash_hex
         self.videoHashDec = int(self.videoHashHex, 16)
 

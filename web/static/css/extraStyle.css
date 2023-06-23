@@ -38,7 +38,7 @@ body {
 
 .topbar {
   display: inline-block;
-  align: left;
+  /* align: left; */
   margin: left;
   padding: 5px;
 }
@@ -90,6 +90,8 @@ div.video span{
 }
 
 #text{
+  width: 800px;
+  margin:0 auto;
   position: relative;
   text-align: center;
   color: #fff;
@@ -114,6 +116,7 @@ div.video span{
   position: relative;
   display: inline-block;
   bottom: 10px;
+  padding-inline: 3px;
 }
 
 #logo{

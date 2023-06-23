@@ -117,6 +117,7 @@ div.video span{
   position: relative;
   display: inline-block;
   bottom: 10px;
+  padding-inline: 3px;
 }
 
 #logo{

@@ -4,56 +4,19 @@
 
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Aethra</title>
-    <meta name="description" content="A reverse video search engine. Search by 
-      ``using a url to a video."></meta>
+    <title>Error · Aethra</title>
 
     <link rel="manifest" href="/aethra.webmanifest">
     <link rel="icon" type="image/x-icon" href="/assets/favicon.ico">
-    <link rel="stylesheet" href="static/css/style.css">
-    <link rel="stylesheet" href="https://pyscript.net/alpha/pyscript.css">
+    <link rel="stylesheet" href="/static/css/style.css" />
+    <link rel="stylesheet" href="https://pyscript.net/alpha/pyscript.css" />
 
   </head>
   <body>
 
-    <div id="centre-box" class="centre">
-      <div id="icon" class="centre">
-        <a href="/">
-          <img src="/assets/icon-256.png" alt="Aethra icon" width="280" height="280" class="centre">
-        </a>
-      </div>
-
-
-        <h1 id="title-text" class="centre">
-          <a href="/">
-            Aethra
-          </a>
-        </h1>
-
-      <div id="cover">
-        <form method="post" action="/q">
-
-          <div class="tb">
-            <div class="td">
-              <input name="search" id="search" type="text" placeholder="URL"
-              required autofocus>
-            </div>
-
-            <div class="td" id="s-cover">
-
-              <button type="submit">
-                <div id="s-circle"></div>
-                <span></span>
-              </button>
-
-            </div>
-          </div>
-
-        </form>
-      </div>
-
-      <p id="text">Please be aware that the search function is not optimised yet
-         and will take a few seconds.</p>
+    <div class="centre">
+        <h1 id="title-text"><%= error %></h1>
+        <p id="text"><%= text %></p>
     </div>
 
   </body>
@@ -64,7 +27,7 @@
 
             <span id="copy-text">&copy; 2023</span>
             <span id="copy-text">Chico Demmenie</span>
-            
+
             <span id="copy-text">·</span>
 
             <div id="copy-text">
@@ -112,6 +75,5 @@
         </div>
     </div>
 
-    <script type="text/javascript" src="static/app.js"></script>
   </footer>
 </html>
