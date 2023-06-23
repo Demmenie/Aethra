@@ -87,7 +87,7 @@ class DBSearch:
         #Printing the error if one occurs 
         except videohash.exceptions.DownloadFailed as err:
             print(f"videoHash errored out with exception:\n{err}")
-            return "download_failed"
+            return "download_failed", err
 
         print(f"Hashing in {time.time() - start}")
         start = time.time()

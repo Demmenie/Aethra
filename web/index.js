@@ -8,7 +8,7 @@ const path = require('path');
 const fs = require('fs');
 const morgan = require('morgan');
 const pb = require('python-bridge');
-const python = pb();
+const python = pb({pythonPath: 'python3', python: 'python3'});
 const pageRender = require('./render');
 require('dotenv').config({path: './config.env'});
 
@@ -17,7 +17,7 @@ const sPath = path.join(__dirname, 'search.py');
 python.ex`
 import importlib.util
 import sys
-spec = importlib.util.spec_from_file_location("search", ${sPath})
+spec = importlib.util.spec_from_file_location("search", "Search.py")
 search = importlib.util.module_from_spec(spec)
 sys.modules["search"] = search
 spec.loader.exec_module(search)
@@ -69,7 +69,7 @@ const server = () => {
         /*Calling the cleaning function to make sure that the input is a
         link and not something else.*/
         const cleaning = new Promise(async (resolve) => {
-            resolve(await python`DBSearch.cleaning(
+            resolve(await python`search.DBSearch().cleaning(
                 ${req.query.q}
             )`);
         });
@@ -80,8 +80,9 @@ const server = () => {
             
             if (this.clean == true) {
                 async function sSearch() {
-                    return await python`DBSearch.standard(
-                        ${req.query.q}, ${this.uList}
+                    return await python`search.DBSearch().standard(
+                        ${req.query.q}, 
+                        ${this.uList}
                     )`;
                 }
                 sSearch.bind(this)().then(function(sResponse) {
@@ -239,7 +240,7 @@ const getList = () => {
             // An async function that calls the python function to update
             // Returns this.uList and this.lastUpdate.
             async function refresh(){
-                return await python`DBSearch.updateList()`;
+                return await python`search.DBSearch().updateList()`;
             }
             refresh.bind(this)().then(function(uList){
                 this.uList = uList
