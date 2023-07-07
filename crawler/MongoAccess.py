@@ -177,7 +177,7 @@ class mongoServe:
     
         #Checking similar videos to reduce duplicates.
         if result == None and endIndex != None:
-            searchList = self.allDocs[endIndex-1:endIndex+1]
+            searchList = self.allDocs[endIndex-5:endIndex+5]
 
             for vid in searchList:
                 for post in vid["postList"]:
