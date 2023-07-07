@@ -1,8 +1,9 @@
-#05/10/2022
+#07/07/2023
 #Chico Demmenie
 #Aethra/Scraper/Main.py
 
 import tweepy
+from snscrape.modules import *
 import requests
 import urllib3
 import http
@@ -10,6 +11,7 @@ import time
 import datetime
 import json
 import shutil
+import re
 import videohash
 from MongoAccess import mongoServe
 
@@ -26,7 +28,7 @@ class main:
 
         #Retrieving OAuth Twitter keys and lists
         self.keys = json.load(open("../data/keys.json", "r"))
-        self.lists = open("../data/twitterLists.txt").readlines()
+        self.lists = json.loads(open("../data/lists.json").read())
 
         #Setting up tweepy api (V1.1)
         auth = tweepy.OAuth1UserHandler(
@@ -48,30 +50,97 @@ class main:
 
 
         #Backing up the database on startup
-        mongoServe().fullBackup()
+        #mongoServe().fullBackup()
         lastBackup = time.time()
         self.running = True
         while self.running:
 
             if (lastBackup + 3600) < time.time():
-                mongoServe().fullBackup()
+                #mongoServe().fullBackup()
                 lastBackup = time.time()
 
-            self.twitSave()
-            print(f"[{datetime.datetime.now()}] Sleeping 75 secs")
-            time.sleep(75)
+            self.telegram()
 
     #---------------------------------------------------------------------------
-    def twitSave(self):
+    class postOb:
+
+        """A single class shared across all platforms to add to the database."""
+
+        hashDec = None
+        hashHex = None
+        platform = None
+        id = None
+        author = None
+        text = None
+        timestamp = time.time()
+        uTime = None
+
+
+            
+    #---------------------------------------------------------------------------
+    def telegram(self):
+
+        """
+        Desc: Saves videos from telegram channels.
+        """
+
+        #Going through the channel list to find new posts to add to the database.
+        for channel in self.lists["telegram"]:
+
+            posts = telegram.TelegramChannelScraper(channel).get_items()
+
+            for post in posts:
+
+                try:
+                    self.videoHash(post.url)
+
+                    lastSlash = post.url.rfind('/')
+                    postID = post.url[lastSlash+1:]
+
+                    print(post.url, postID)
+
+                    postOb = self.postOb()
+                    postOb.hashDec = self.videoHashDec
+                    postOb.hashHex = self.videoHashHex
+                    postOb.platform = "telegram"
+                    postOb.id = postID
+                    postOb.author = channel
+                    postOb.text = post.content
+                    postOb.uTime = datetime.datetime.timestamp(post.date)
+
+                    print(postOb.hashDec,
+                        postOb.hashHex,
+                        postOb.platform,
+                        postOb.id,
+                        postOb.author,
+                        postOb.text,
+                        postOb.timestamp,
+                        postOb.uTime)
+                    
+                    self.resolve(postOb)
+
+
+                except videohash.exceptions.DownloadFailed as err:
+                    print(f"[{datetime.datetime.now()}] Caught: {err}",
+                        "continuing.")
+                    continue
+
+                except videohash.exceptions.FFmpegFailedToExtractFrames as err:
+                    print(f"[{datetime.datetime.now()}] Caught: {err}",
+                        "continuing.")
+                    continue
+
+
+    #---------------------------------------------------------------------------
+    def twitter(self):
 
         """
         Desc: Saves videos from Twitter.
         """
 
         #Going through the lists to find new tweets to add to the database.
-        for list in self.lists:
+        for list in self.lists["twitter"]:
 
-            list = list[:-1]
             print(f"\n[{datetime.datetime.now()}] {list}")
 
             while True:
@@ -179,13 +248,13 @@ class main:
                             self.videoHash(url)
 
                         except videohash.exceptions.DownloadFailed as err:
-                            print(f"[{datetime.datetime.now()}] Caught: {err},",
-                                " continuing.")
+                            print(f"[{datetime.datetime.now()}] Caught: {err}",
+                                "continuing.")
                             continue
 
                         except videohash.exceptions.FFmpegFailedToExtractFrames as err:
 
-                            print(f"[{datetime.datetime.now()}] Caught: {err},",
+                            print(f"[{datetime.datetime.now()}] Caught: {err}",
                                 "continuing.")
                             continue
 
@@ -220,6 +289,31 @@ class main:
 
                             mongoServe().newEntry(post)
 
+
+    #---------------------------------------------------------------------------
+    def resolve(self, post):
+
+        """
+        Desc: Resolves the post with the database
+        """
+
+        #Searching the database to see if this video already
+        #exists.
+        result = mongoServe().entryCheck(post.id, self.videoHashHex,
+            self.videoHashDec)
+
+
+        #Adding the new tweet to an existing entry
+        if result != None and result != "preexist":
+
+            post.index = result["index"]
+            mongoServe().addToEntry(post)
+
+        #Creating a new entry for a new tweet.
+        elif result == None:
+
+            mongoServe().newEntry(post)
+    
 
     #---------------------------------------------------------------------------
     def videoHash(self, url):
