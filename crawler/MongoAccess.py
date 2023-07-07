@@ -49,7 +49,7 @@ class mongoServe:
 
     #A function that checks if the vehicle already exists.
     #---------------------------------------------------------------------------
-    def entryCheck(self, id, hashHex, hashDec):
+    def entryCheck(self, id, author, hashHex, hashDec):
 
         """
         Desc: Checks any entry against the database to see if the entry already
@@ -117,6 +117,7 @@ class mongoServe:
 
         #Defining values for the while loop
         result = None
+        endIndex = None
         halfLength = length / 2
         modifyLength = copy.copy(halfLength)
         searching = True
@@ -142,8 +143,8 @@ class mongoServe:
                 int(ceilDoc["hashDec"]) > hashDec):
 
                 result = None
+                endIndex = floorDoc["index"]
                 searching = False
-                break
 
             #If either of the docs are None then we've reached the top
             #or bottom.
@@ -170,10 +171,19 @@ class mongoServe:
             if result != None:
                 for post in result["postList"]:
 
-                    if post["id"] == str(id):
+                    if post["id"] == str(id) and post["author"] == author:
                         result = "preexist"
                         break
+    
+        #Checking similar videos to reduce duplicates.
+        if result == None and endIndex != None:
+            searchList = self.allDocs[endIndex-1:endIndex+1]
 
+            for vid in searchList:
+                for post in vid["postList"]:
+
+                    if post["id"] == str(id) and post["author"] == author:
+                        result == "preexist"
 
         #Returning what we've found
         print(f"[{datetime.datetime.now()}] {result}")

@@ -92,12 +92,11 @@ class main:
             for post in posts:
 
                 try:
-                    self.videoHash(post.url)
-
                     lastSlash = post.url.rfind('/')
                     postID = post.url[lastSlash+1:]
+                    url = f"https://t.me/{channel}/{postID}"
 
-                    print(post.url, postID)
+                    self.videoHash(url)
 
                     postOb = self.postOb()
                     postOb.hashDec = self.videoHashDec
@@ -107,15 +106,6 @@ class main:
                     postOb.author = channel
                     postOb.text = post.content
                     postOb.uTime = datetime.datetime.timestamp(post.date)
-
-                    print(postOb.hashDec,
-                        postOb.hashHex,
-                        postOb.platform,
-                        postOb.id,
-                        postOb.author,
-                        postOb.text,
-                        postOb.timestamp,
-                        postOb.uTime)
                     
                     self.resolve(postOb)
 
@@ -299,7 +289,8 @@ class main:
 
         #Searching the database to see if this video already
         #exists.
-        result = mongoServe().entryCheck(post.id, self.videoHashHex,
+        result = mongoServe().entryCheck(post.id, post.author,
+            self.videoHashHex,
             self.videoHashDec)
 
 
