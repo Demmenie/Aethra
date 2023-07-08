@@ -1,4 +1,7 @@
 # Aethra
+
+![Static Badge](https://img.shields.io/badge/version-0.3.0-green)
+
 A tool used to do reverse video searches.
 
 This search engine includes a scraper that crawls the open internet looking for videos that it then indexes by creating a locality sensitive hash of the video. The search engine will then allow a person to enter a video that they want to find. This video is then also hashed and compared to what's already in the index using binary search; a list of similar videos will then appear with the sources that produced them.
