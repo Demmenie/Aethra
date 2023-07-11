@@ -1,6 +1,6 @@
-#07/07/2023
+#11/07/2023
 #Chico Demmenie
-#Aethra/Scraper/Main.py
+#Aethra/crawler/main.py
 
 import tweepy
 from snscrape.modules import *
@@ -11,7 +11,6 @@ import time
 import datetime
 import json
 import shutil
-import re
 import videohash
 from MongoAccess import mongoServe
 
@@ -27,8 +26,13 @@ class main:
         """
 
         #Retrieving OAuth Twitter keys and lists
-        self.keys = json.load(open("../data/keys.json", "r"))
-        self.lists = json.loads(open("../data/lists.json").read())
+        keys = open("../data/keys.json", "r")
+        self.keys = json.load(keys)
+        keys.close()
+
+        lists = open("../data/lists.json")
+        self.lists = json.loads(lists.read())
+        lists.close()
 
         #Setting up tweepy api (V1.1)
         auth = tweepy.OAuth1UserHandler(
@@ -47,19 +51,6 @@ class main:
             access_token=self.keys["accessToken"],
             access_token_secret=self.keys["accessSecret"],
             wait_on_rate_limit=True)
-
-
-        #Backing up the database on startup
-        #mongoServe().fullBackup()
-        lastBackup = time.time()
-        self.running = True
-        while self.running:
-
-            if (lastBackup + 3600) < time.time():
-                #mongoServe().fullBackup()
-                lastBackup = time.time()
-
-            self.telegram()
 
     #---------------------------------------------------------------------------
     class postOb:
@@ -89,8 +80,21 @@ class main:
 
             posts = telegram.TelegramChannelScraper(channel).get_items()
 
+            counter = 0
             for post in posts:
+                
+                if counter > 10:
+                    break
 
+                counter = counter + 1
+
+                #First checking for montioned accounts that we might not have
+                #stored yet.
+                #First checking for montioned accounts that we might not have
+                #stored yet.
+                self.lists = self.findTelUsers(post.outlinks, self.lists)
+
+                #Now looking to see if the post has a video in it.
                 try:
                     lastSlash = post.url.rfind('/')
                     postID = post.url[lastSlash+1:]
@@ -107,7 +111,7 @@ class main:
                     postOb.text = post.content
                     postOb.uTime = datetime.datetime.timestamp(post.date)
                     
-                    self.resolve(postOb)
+                    self.resolve(postOb, self.videoHashHex, self.videoHashDec)
 
 
                 except videohash.exceptions.DownloadFailed as err:
@@ -279,9 +283,53 @@ class main:
 
                             mongoServe().newEntry(post)
 
+    #---------------------------------------------------------------------------
+    def findTelUsers(self, outlinks, lists):
+
+        """
+        Desc: Finds new users in the outlinks of telegram posts.
+        """
+
+        print(f"[{datetime.datetime.now()}] findTelUsers()")
+
+        for link in outlinks:
+
+            if link.find("https://t.me/s/") != -1:
+                telURL = "https://t.me/s/"
+                
+            elif link.find("https://t.me/") != -1:
+                telURL = "https://t.me/"
+            
+            else:
+                continue
+
+
+            nameStart = link.rfind(telURL) + len(telURL)
+
+            if link[len(telURL):].find("/") == -1 and link.find("?") == -1:
+                username = link[nameStart:]
+
+            elif link.find("?") == -1:
+                nameEnd = link.rfind("/")
+                username = link[nameStart:nameEnd]
+
+            else:
+                continue
+
+
+            if username not in lists["telegram"]:
+                print(f"[{datetime.datetime.now()}] {username} added.")
+                lists["telegram"].append(username)
+
+
+        listsFile = open("../data/lists.json", "w")
+        listsFile.write(json.dumps(lists))
+        listsFile.close()
+        
+        return lists
 
     #---------------------------------------------------------------------------
-    def resolve(self, post):
+    def resolve(self, post, hashHex, hashDec):
 
         """
         Desc: Resolves the post with the database
@@ -290,8 +338,8 @@ class main:
         #Searching the database to see if this video already
         #exists.
         result = mongoServe().entryCheck(post.id, post.author,
-            self.videoHashHex,
-            self.videoHashDec)
+            hashHex,
+            hashDec)
 
 
         #Adding the new tweet to an existing entry
@@ -333,6 +381,18 @@ class main:
 
         shutil.rmtree(cutPath)
 
+        return self.videoHashHex, self.videoHashDec
+
 
 if __name__ == "__main__":
-    main()
+    #Backing up the database on startup
+    #mongoServe().fullBackup()
+    lastBackup = time.time()
+    running = True
+    while running:
+
+        if (lastBackup + 3600) < time.time():
+            #mongoServe().fullBackup()
+            lastBackup = time.time()
+
+        main().telegram()
