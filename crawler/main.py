@@ -30,27 +30,25 @@ class main:
         self.keys = json.load(keys)
         keys.close()
 
-        lists = open("../data/lists.json")
-        self.lists = json.loads(lists.read())
-        lists.close()
-
         #Setting up tweepy api (V1.1)
-        auth = tweepy.OAuth1UserHandler(
-           consumer_key=self.keys["apiKey"],
-           consumer_secret=self.keys["apiSecret"],
-           access_token=self.keys["accessToken"],
-           access_token_secret=self.keys["accessSecret"])
+        #auth = tweepy.OAuth1UserHandler(
+           #consumer_key=self.keys["apiKey"],
+           #consumer_secret=self.keys["apiSecret"],
+           #access_token=self.keys["accessToken"],
+           #access_token_secret=self.keys["accessSecret"])
 
-        self.api = tweepy.API(auth)
+        #self.api = tweepy.API(auth)
 
         #Setting up Tweepy Client (V2.0)
-        self.client = tweepy.Client(
-            bearer_token=self.keys["bearerToken"],
-            consumer_key=self.keys["apiKey"],
-            consumer_secret=self.keys["apiSecret"],
-            access_token=self.keys["accessToken"],
-            access_token_secret=self.keys["accessSecret"],
-            wait_on_rate_limit=True)
+        #self.client = tweepy.Client(
+            #bearer_token=self.keys["bearerToken"],
+            #consumer_key=self.keys["apiKey"],
+            #consumer_secret=self.keys["apiSecret"],
+            #access_token=self.keys["accessToken"],
+            #access_token_secret=self.keys["accessSecret"],
+            #wait_on_rate_limit=True)
+        
+        self.lists = mongoServe().getLists()
 
     #---------------------------------------------------------------------------
     class postOb:
@@ -319,12 +317,8 @@ class main:
 
             if username not in lists["telegram"]:
                 print(f"[{datetime.datetime.now()}] {username} added.")
+                mongoServe().appendLists("telegram", username)
                 lists["telegram"].append(username)
-
-
-        listsFile = open("../data/lists.json", "w")
-        listsFile.write(json.dumps(lists))
-        listsFile.close()
         
         return lists
 

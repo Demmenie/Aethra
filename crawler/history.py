@@ -7,8 +7,8 @@ import videohash
 import time
 import datetime
 import json
-from MongoAccess import mongoServe
 from main import main
+from MongoAccess import mongoServe
 
 class history():
 
@@ -25,14 +25,8 @@ class history():
         self.keys = json.load(keys)
         keys.close()
 
-        lists = open("../data/lists.json", "r")
-        self.lists = json.loads(lists.read())
-        lists.close()
+        self.lists = mongoServe().getLists()
 
-        self.running = True
-        while self.running:
-
-            self.telegram()
 
     #---------------------------------------------------------------------------
     class postOb:
@@ -47,7 +41,6 @@ class history():
         text = None
         timestamp = time.time()
         uTime = None
-
 
             
     #---------------------------------------------------------------------------
@@ -99,4 +92,8 @@ class history():
                     continue
 
 if __name__ == "__main__":
-    history()
+
+    running = True
+    while running:
+
+        history().telegram()

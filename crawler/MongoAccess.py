@@ -1,6 +1,6 @@
-#29/10/2022
+#07/08/2023
 #Chico Demmenie
-#Aethra/Scraper/MongoAccess.py
+#Aethra/crawler/MongoAccess.py
 
 #Importing dependencies
 import pymongo
@@ -29,6 +29,7 @@ class mongoServe:
         keyFile.close()
 
         self.lockID = bson.ObjectId("64adabb65fa42c8c80b3931a")
+        self.listsID = bson.ObjectId("64adabd75fa42c8c80b3931b")
 
         mongoPass = self.keys["mongoPass"]
         mongoCluster = self.keys["mongoCluster"]
@@ -46,7 +47,7 @@ class mongoServe:
         #Setting the class wide variables that connect to the database and the
         #MilVec collection.
         self.db = self.client.Aethra
-        self.video = self.db.video2
+        self.video = self.db.video3
         self.lists = self.db.lists
         self.backup = self.db.backup
 
@@ -217,6 +218,7 @@ class mongoServe:
                 self.allDocs = list(self.video.find({}).sort("index"))
                 length = len(self.allDocs)
 
+
                 #Creating a while loop to do binary search on the database.
                 halfLength = length / 2
                 modifyLength = copy.copy(halfLength)
@@ -249,15 +251,15 @@ class mongoServe:
                     elif (ceilDoc["index"] == (length - 1) and
                         int(ceilDoc["hashDec"]) < post.hashDec):
 
-                        index = ceilDoc["index"]
+                        index = ceilDoc["index"] + 1
                         searching = False
-
 
                     elif int(ceilDoc["hashDec"]) < post.hashDec:
                         halfLength = halfLength + modifyLength
 
                     elif int(floorDoc["hashDec"]) > post.hashDec:
                         halfLength = halfLength - modifyLength
+
 
                 locked = False
                 while not locked:
@@ -302,6 +304,7 @@ class mongoServe:
                     {"$set": {"dataLock": False}})
 
                 responding = True
+
 
             except pymongo.errors.NetworkTimeout as err:
                 self.lists.update_one(
@@ -520,6 +523,20 @@ class mongoServe:
 
                 print(f"[{datetime.datetime.now()}] Caught: {err}, sleeping 60")
                 time.sleep(60)
+
+    def getLists(self):
+
+        """Returns lists object from the database."""
+
+        lists = self.lists.find_one({"_id": self.listsID})
+
+        return lists
+    
+
+    def appendLists(self, type, username):
+
+        self.lists.update_one({"_id": self.listsID},
+                              {"$push": {type: username}})
 
 
 #-------------------------------------------------------------------------------
