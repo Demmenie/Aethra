@@ -54,9 +54,13 @@ class history():
         for channel in self.lists["telegram"]:
 
             try:
+                print(f"[{datetime.datetime.now()}] Getting historical posts", 
+                      f"from {channel}")
                 posts = telegram.TelegramChannelScraper(channel).get_items()
 
-            except snscrape.base.ScraperException:
+            except snscrape.base.ScraperException as err:
+                print(f"[{datetime.datetime.now()}] Caught: {err}",
+                        "continuing.")
                 continue
 
             for post in posts:
