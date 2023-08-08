@@ -25,8 +25,6 @@ class history():
         self.keys = json.load(keys)
         keys.close()
 
-        self.lists = mongoServe().getLists()
-
 
     #---------------------------------------------------------------------------
     class postOb:
@@ -49,6 +47,8 @@ class history():
         """
         Desc: Saves videos from telegram channels.
         """
+
+        self.lists = mongoServe().getLists()
 
         #Going through the channel list to find new posts to add to the database.
         for channel in self.lists["telegram"]:

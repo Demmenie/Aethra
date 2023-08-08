@@ -47,8 +47,7 @@ class main:
             #access_token=self.keys["accessToken"],
             #access_token_secret=self.keys["accessSecret"],
             #wait_on_rate_limit=True)
-        
-        self.lists = mongoServe().getLists()
+    
 
     #---------------------------------------------------------------------------
     class postOb:
@@ -72,6 +71,8 @@ class main:
         """
         Desc: Saves videos from telegram channels.
         """
+
+        self.lists = mongoServe().getLists()
 
         #Going through the channel list to find new posts to add to the database.
         for channel in self.lists["telegram"]:
