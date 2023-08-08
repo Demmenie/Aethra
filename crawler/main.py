@@ -76,15 +76,18 @@ class main:
         #Going through the channel list to find new posts to add to the database.
         for channel in self.lists["telegram"]:
 
-            posts = telegram.TelegramChannelScraper(channel).get_items()
+            try:
+                posts = telegram.TelegramChannelScraper(channel).get_items()
 
-            counter = 0
-            for post in posts:
+            except snscrape.base.ScraperException:
+                continue
+
+
+            for index, post in enumerate(posts):
                 
-                if counter > 10:
+                if index > 9:
                     break
 
-                counter = counter + 1
 
                 #First checking for montioned accounts that we might not have
                 #stored yet.

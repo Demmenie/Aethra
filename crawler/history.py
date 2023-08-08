@@ -53,7 +53,11 @@ class history():
         #Going through the channel list to find new posts to add to the database.
         for channel in self.lists["telegram"]:
 
-            posts = telegram.TelegramChannelScraper(channel).get_items()
+            try:
+                posts = telegram.TelegramChannelScraper(channel).get_items()
+
+            except snscrape.base.ScraperException:
+                continue
 
             for post in posts:
                 
