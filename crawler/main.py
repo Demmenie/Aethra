@@ -87,48 +87,55 @@ class main:
                         "continuing.")
                 continue
 
-
-            for index, post in enumerate(posts):
-                
-                if index > 9:
-                    break
-
-
-                #First checking for montioned accounts that we might not have
-                #stored yet.
-                #First checking for montioned accounts that we might not have
-                #stored yet.
-                self.lists = self.findTelUsers(post.outlinks, self.lists)
-
-                #Now looking to see if the post has a video in it.
-                try:
-                    lastSlash = post.url.rfind('/')
-                    postID = post.url[lastSlash+1:]
-                    url = f"https://t.me/{channel}/{postID}"
-
-                    self.videoHash(url)
-
-                    postOb = self.postOb()
-                    postOb.hashDec = self.videoHashDec
-                    postOb.hashHex = self.videoHashHex
-                    postOb.platform = "telegram"
-                    postOb.id = postID
-                    postOb.author = channel
-                    postOb.text = post.content
-                    postOb.uTime = datetime.datetime.timestamp(post.date)
+            try:
+                for index, post in enumerate(posts):
                     
-                    self.resolve(postOb, self.videoHashHex, self.videoHashDec)
+                    if index > 9:
+                        break
 
 
-                except videohash.exceptions.DownloadFailed as err:
-                    print(f"[{datetime.datetime.now()}] Caught: {err}",
-                        "continuing.")
-                    continue
+                    #First checking for montioned accounts that we might not have
+                    #stored yet.
+                    #First checking for montioned accounts that we might not have
+                    #stored yet.
+                    self.lists = self.findTelUsers(post.outlinks, self.lists)
 
-                except videohash.exceptions.FFmpegFailedToExtractFrames as err:
-                    print(f"[{datetime.datetime.now()}] Caught: {err}",
-                        "continuing.")
-                    continue
+                    #Now looking to see if the post has a video in it.
+                    try:
+                        lastSlash = post.url.rfind('/')
+                        postID = post.url[lastSlash+1:]
+                        url = f"https://t.me/{channel}/{postID}"
+
+                        self.videoHash(url)
+
+                        postOb = self.postOb()
+                        postOb.hashDec = self.videoHashDec
+                        postOb.hashHex = self.videoHashHex
+                        postOb.platform = "telegram"
+                        postOb.id = postID
+                        postOb.author = channel
+                        postOb.text = post.content
+                        postOb.uTime = datetime.datetime.timestamp(post.date)
+                        
+                        self.resolve(postOb, self.videoHashHex, self.videoHashDec)
+
+
+                    except videohash.exceptions.DownloadFailed as err:
+                        print(f"[{datetime.datetime.now()}] Caught: {err}",
+                            "continuing.")
+                        continue
+
+                    except videohash.exceptions.FFmpegFailedToExtractFrames as err:
+                        print(f"[{datetime.datetime.now()}] Caught: {err}",
+                            "continuing.")
+                        continue
+
+            except snscrape.base.ScraperException as err:
+                print(print(f"[{datetime.datetime.now()}] Caught: {err}",
+                    "waiting 60 secs and continuing."))
+                time.sleep(60)
+                continue
+                
 
 
     #---------------------------------------------------------------------------
