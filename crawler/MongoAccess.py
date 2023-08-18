@@ -38,11 +38,22 @@ class mongoServe:
             f"{mongoCluster}.mongodb.net/{mongoAccount}"+
             "?retryWrites=true&w=majority")
 
-        #Setting a 5-second connection timeout so that we're not pinging the
+        #Setting a 30 second connection timeout so that we're not pinging the
         #server endlessly
-        self.client = pymongo.MongoClient(conn,
-            tls=True,
-            serverSelectionTimeoutMS=5000)
+        responding = False
+        while not responding:
+
+            try:
+                self.client = pymongo.MongoClient(conn,
+                    tls=True,
+                    serverSelectionTimeoutMS=30000)
+                responding = True
+                
+            except pymongo.errors.ConfigurationError as err:
+                print(print(f"[{datetime.datetime.now()}] Caught: {err}",
+                    "sleeping 60 secs."))
+                time.sleep(60)
+
 
         #Setting the class wide variables that connect to the database and the
         #MilVec collection.
