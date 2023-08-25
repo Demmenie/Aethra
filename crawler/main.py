@@ -3,6 +3,7 @@
 #Aethra/crawler/main.py
 
 import tweepy
+import snscrape
 from snscrape.modules import *
 import requests
 import urllib3
@@ -312,6 +313,12 @@ class main:
                 
             elif link.find("https://t.me/") != -1:
                 telURL = "https://t.me/"
+
+            elif link.find("https://t.me/s/+") != -1:
+                continue
+
+            elif link.find("https://t.me/+") != -1:
+                continue
             
             else:
                 continue
