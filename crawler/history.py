@@ -100,9 +100,9 @@ class history():
                     main().resolve(postOb, hashHex, hashDec)
 
             except snscrape.base.ScraperException as err:
-            print(f"[{datetime.datetime.now()}] Caught: {err}",
-                    "continuing.")
-            continue
+                print(f"[{datetime.datetime.now()}] Caught: {err}",
+                        "continuing.")
+                continue
 
 
 if __name__ == "__main__":
