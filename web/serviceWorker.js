@@ -57,71 +57,32 @@ self.addEventListener('activate', e => {
 self.addEventListener("fetch", evt => {
     console.log("fetch event", evt);
     try{
-    evt.respondWith(
-     caches.match(evt.request).then(cacheRes => {
-         return cacheRes || fetch(evt.request).then(fetchRes =>{
-             return caches.open(cacheName).then(cache =>{
-                 cache.put(evt.request.url, fetchRes.clone());
-                 return fetchRes;
-             })
-         });
-     }))
+        evt.respondWith(
+            caches.match(evt.request).then(cacheRes => {
+
+                console.log(`[Service Worker] ${evt.request.url} Returning cache.`)
+                return cacheRes.then(cacheRes =>{ 
+                        fetch(evt.request).then(fetchRes =>{
+                        
+                        console.log(`[Service Worker] ${evt.request.url} Requesting page`)
+                        return caches.open(cacheName).then(cache =>{
+                            
+                            console.log(`[Service Worker] ${evt.request.url} Checking cache against new page`)
+                            
+                            if (toString(fetchRes) === toString(cacheRes)) {
+                                console.log(`[Service Worker] ${evt.request.url} New page was the same`)
+                            
+                            } else {
+                                console.log(`[Service Worker] ${evt.request.url} New page was different, caching and returning`)
+                                
+                                cache.put(evt.request.url, fetchRes.clone());
+                                return fetchRes;
+                            }
+                        })
+                    });
+                })
+            }))
      } catch {
-         return caches.match("/views/main/fallback.ejs");
+        return caches.match("/views/main/fallback.ejs");
      }
  });
-
-
-// Two other versions of the above section which didn't work too well.
-/*
-// Runs when the service worker fetches a file
-self.addEventListener("fetch", e => {
-    e.respondWith(
-        async () => {
-            try{
-                // First see if the response is cached
-                const cache = await caches.open(cacheName);
-                console.log('[Service Worker] Fetching resource:',
-                    e.request.url);
-                let cachedRes = await cache.match(e.response);
-
-                if (cachedRes) {
-                    console.log('[Service Worker] Returning cached result');
-                    const cachedRes = caches.match(e.request);
-                    console.log(cachedRes)
-                    return cachedRes;
-                } else {
-                    console.log('[Service Worker] Caching new resource:',
-                        e.request.url);
-                    const networkRes = await fetch(e.request);
-                    await cache.put(e.request, networkRes.clone());
-                    console.log(networkRes)
-                    return networkRes;
-                }
-            } catch (error) {
-                console.log('[Service Worker] Error:', error)
-                const cachedRes = cache.match("/offline")
-                console.log(cachedRes)
-                return cachedRes;
-            }
-        }
-
-        // A different version of the fetch section which worked roughly the same.
-        
-        async () => {
-            const cache = await caches.open(cacheName);
-            cache.match(e.request).then(function (r) {
-                console.log('[Service Worker] Fetching resource:', e.request.url);
-                return r || fetch(e.request).then(async (response) => {
-                    return await caches.open(cacheName).then(async (cache) => {
-                        console.log('[Service Worker] Caching new resource:',
-                            e.request.url);
-                        await cache.put(e.request, response.clone());
-                        return response;
-                    });
-                });
-            })
-        }
-        
-    );
-}); */

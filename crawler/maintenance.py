@@ -36,9 +36,10 @@ class maintenance:
         #Setting the class wide variables that connect to the database and the
         #MilVec collection.
         self.db = self.client.Aethra
+        self.video2 = self.db.video3
         self.video = self.db.video
         self.allDocs = list(self.video.find({}).sort("index"))
-        self.count = self.video.count_documents({})
+        self.count = len(self.allDocs)
 
         #self.ms = mongoServe()
 
@@ -51,17 +52,17 @@ class maintenance:
 
         ordered = True
         lastDoc = None
-        for doc in range(0, self.count):
+        for index, doc in enumerate(self.allDocs[:-1]):
+            
+            nextDoc = self.allDocs[index+1]
 
-            thisDoc = self.video.find_one({"index": doc})
-            if lastDoc != None and thisDoc["hashDec"] < lastDoc["hashDec"]:
+            if (int(doc["hashDec"]) > int(nextDoc["hashDec"])):
 
+                print(f"{doc['hashDec']} > {nextDoc['hashDec']}\n")
                 ordered = False
                 break
 
-            else:
-                lastDoc = copy.copy(thisDoc)
-
+        print(f"Ordered: {ordered}")
         return ordered
 
 
@@ -72,16 +73,33 @@ class maintenance:
         ###################################=====================================
         #Needs finishing
 
-        duplicates = []
+        vidDuplicates = []
         for index, eachDoc in enumerate(self.allDocs[:self.count]):
 
             for otherDoc in self.allDocs[index+1:]:
 
                 if eachDoc["hashHex"] == otherDoc["hashHex"]:
 
-                    duplicates.append((eachDoc["index"], otherDoc["index"]))
+                    vidDuplicates.append((eachDoc["index"], otherDoc["index"]))
+        
+        postDuplicates = []
+        for index, eachDoc in enumerate(self.allDocs[:self.count]):
 
-        return duplicates
+            for post in eachDoc["postList"]:
+
+                for otherDoc in self.allDocs[index+1:]:
+
+                    for otherPost in otherDoc["postList"]:
+
+                        if (post["id"] == otherPost["id"] and 
+                            post["author"] == otherPost["author"]):
+                            
+                            postDuplicates.append((
+                                f"{eachDoc['index']}: {post['id'], post['author']} & "+
+                                f"{otherDoc['index']}: {otherPost['id'], otherPost['author']}"))
+
+
+        return vidDuplicates, postDuplicates
 
 
     def reOrder(self):
@@ -96,7 +114,9 @@ class maintenance:
 
         swapped = False
         # Traverse through all array elements
-        for i in range(n-1):
+        for i in range(n):
+
+            print(i)
 
             # range(n) also work but outer loop will
             # repeat one time more than needed.
@@ -108,7 +128,7 @@ class maintenance:
                 # than the next element
                 a = self.video.find_one({"index": j})["hashDec"]
                 b = self.video.find_one({"index": (j + 1)})["hashDec"]
-                if a > b:
+                if (int(a) > int(b)):
 
                     swapped = True
                     self.video.update_one({"index": j, "hashDec": a},
@@ -130,14 +150,12 @@ class maintenance:
             it in some way."""
 
         
-
-        for doc in self.allDocs[3154:]:
+        for doc in self.allDocs:
 
             for post in doc["postList"]:
 
                 try:
-                    self.vh((f"https://twitter.com/{post['author']}/status/"+
-                        post["id"]))
+                    self.vh((f"https://t.me/{post['author']}/{post['id']}"))
 
                 except videohash.exceptions.DownloadFailed as err:
                     print(f"Exception occurred:\n {err}"+
@@ -153,14 +171,16 @@ class maintenance:
                 class postCl:
                     hashHex = self.videoHashHex
                     hashDec = self.videoHashDec
-                    platform = "twitter"
+                    platform = "telegram"
                     id = str(post["id"])
                     author = post["author"]
                     text = post["text"]
                     timestamp = post["timestamp"]
                     uTime = post["uploadTime"]
 
-                check = mongoServe().entryCheck(postCl.id, postCl.hashHex,
+                check = mongoServe().entryCheck(postCl.id, 
+                    postCl.author,
+                    postCl.hashHex,
                     postCl.hashDec)
                 
                 if check != None and check != "preexist":
@@ -170,6 +190,20 @@ class maintenance:
 
                 elif check == None:
                     mongoServe().newEntry(postCl)
+
+
+    def reindex(self):
+
+        """Gives each doc a new index."""
+
+        print("reindex")
+
+        videos = self.video.find({})
+
+        for index, eachVid in enumerate(videos):
+
+            self.video.update_one({"index": eachVid["index"]},
+                                  {"$set": {"index": index}})
 
 
     def vh(self, url):
@@ -191,13 +225,17 @@ class maintenance:
         except OSError as e:
             print("Error: %s - %s." % (e.filename, e.strerror))
 
+        return self.videoHashHex, self.videoHashDec
+
 
 if __name__ == "__main__":
-    #if not maintenance().orderCheck():
-        #if input("reOrder? ") in ["y", "Y", "Ye", "ye", "yes", "Yes"]:
-            #maintenance().reOrder()
-            #print(maintenance().orderCheck())
-
     print(maintenance().duplicateCheck())
-    maintenance().refactor()
+    
+    if not maintenance().orderCheck():
+        if input("reOrder? ") in ["y", "Y", "Ye", "ye", "yes", "Yes"]:
+            #maintenance().reindex()
+            maintenance().reOrder()
+            print(maintenance().orderCheck())
+
+    #maintenance().refactor()
     #maintenance().vh("https://twitter.com/aldin_aba/status/1570102341189177346")

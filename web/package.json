@@ -4,7 +4,7 @@
     "description": "A reverse video search engine.",
     "main": "index.js",
     "scripts": {
-        "start": "node index.js",
+        "start": "nodemon index.js",
         "install": "set DEBUG=app"
     },
     "author": "Chico Demmenie",

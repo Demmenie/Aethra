@@ -8,6 +8,7 @@ function organise(postID, author, platform, tagName){
     tagName).getElementsByClassName("display")[0]
   console.log(postID);
 
+  // Creating a telegram embed.
   if (platform == "telegram") {
     br = document.createElement("br");
     postDisplay.append(br);
@@ -27,10 +28,10 @@ function organise(postID, author, platform, tagName){
 
   } else if (platform == "twitter") {
 
+    // Creating the tweet embed with embed factory.
     twttr.ready(() => {
-      //Creating the tweet embed with embed factory.
       twttr.widgets.createTweet(
-        tweetID,
+        postID,
         postDisplay,
         omit_script=true,
         align="left",
