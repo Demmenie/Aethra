@@ -7,6 +7,7 @@ import videohash
 import time
 import datetime
 import json
+import random
 from main import main
 from MongoAccess import mongoServe
 
@@ -49,9 +50,14 @@ class history():
         """
 
         self.lists = mongoServe().getLists()
+        telList = self.lists["telegram"]
+        telListLength = len(telList)
 
         #Going through the channel list to find new posts to add to the database.
-        for channel in self.lists["telegram"]:
+        for index in range(len(self.lists["telegram"])):
+
+            chosenIndex = random.randInt(0, telListLength)
+            chosenChannel = telList[chosenIndex]
 
             try:
                 print(f"[{datetime.datetime.now()}] Getting historical posts", 
