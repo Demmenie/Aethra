@@ -3,7 +3,6 @@
 #Aethra/crawler/history.py
 
 from snscrape.modules import *
-import snscrape
 import videohash
 import time
 import datetime
@@ -57,8 +56,8 @@ class history():
         #Going through the channel list to find new posts to add to the database.
         for index in range(len(self.lists["telegram"])):
 
-            chosenIndex = random.randint(0, telListLength)
-            channel = telList[chosenIndex]
+            chosenIndex = random.randInt(0, telListLength)
+            chosenChannel = telList[chosenIndex]
 
             try:
                 print(f"[{datetime.datetime.now()}] Getting historical posts", 

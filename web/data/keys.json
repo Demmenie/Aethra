@@ -1,13 +1,3 @@
-{"userID": "1481030540732022790", 
-"clientID": "ejVxRUJ4VndGcVE4VU15aXlLYk46MTpjaQ", 
-"clientSecret": "KJ_PUOOeCiqVK9PNhQUU-aVwEhioUOZWskYouBALj3brVptDvh", 
-"apiKey": "ub1qRhLstVx5OxVjOwee01Lbx", 
-"apiSecret": "DB2HvtjWv0OaSlihuzqf3jZHYkdRAnXAEuk68sp67bhdXdk8JG", 
-"bearerToken": "AAAAAAAAAAAAAAAAAAAAAJ0JYAEAAAAAJhSrgheNZK9m3TA5G6Y%2Bow%2BOIMQ%3DtETJIJbm9Gb0oOblQxpHoNAUEurEcwtsvsfRrhT4xTxja3Hq8c", 
-"accessToken": "1481030540732022790-lS2hKxBKjsjFvTWhpYEym8acPTUzhj", 
-"accessSecret": "6qspeLO12g49a6uIbahWrotNF018WuZmZlPQmF2jWqZLG", 
-"mongoAccount": "Aethra", 
-"mongoPass": "GirkinGirkin", 
-"mongoCluster": "@cluster0.73j0r0l", 
-"gitPass": "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", 
-"dataLock": false}
+{
+  
+}

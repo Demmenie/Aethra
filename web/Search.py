@@ -41,7 +41,7 @@ class DBSearch:
         #Setting the class wide variables that connect to the database and the
         #video collection.
         self.db = self.client.Aethra
-        self.video = self.db.video3
+        self.video = self.db.video2
 
 
     #---------------------------------------------------------------------------
@@ -90,7 +90,6 @@ class DBSearch:
             return "download_failed", err
 
         print(f"Hashing in {time.time() - start}")
-        print(self.hashDec)
         start = time.time()
 
         #Finding the length of the list so far
@@ -113,12 +112,10 @@ class DBSearch:
             #If one of the selected documents is the correct one, then we don't
             #Need top continue.
             if floorDoc["hashHex"] == self.hashHex:
-
                 result = copy.copy(floorDoc)
                 searching = False
 
             elif ceilDoc["hashHex"] == self.hashHex:
-
                 result = copy.copy(ceilDoc)
                 searching = False
 
@@ -126,21 +123,7 @@ class DBSearch:
             elif (int(floorDoc["hashDec"]) < self.hashDec and
                 int(ceilDoc["hashDec"]) > self.hashDec):
 
-                print(f'{floorDoc["hashDec"]} < {self.hashDec} < {ceilDoc["hashDec"]}')
                 result = copy.copy(floorDoc)
-                searching = False
-
-            #If either of the docs are None then we've reached the top
-            #or bottom.
-            elif floorDoc["index"] == 0 and int(floorDoc["hashDec"]) > self.hashDec:
-
-                result = None
-                searching = False
-
-            elif ceilDoc["index"] == (length - 1) and (int(ceilDoc["hashDec"]) <
-                self.hashDec):
-
-                result = None
                 searching = False
 
             #If we haven't found it yet, we keep dividing the list.
@@ -150,27 +133,19 @@ class DBSearch:
             elif int(floorDoc["hashDec"]) > self.hashDec:
                 halfLength = halfLength - modifyLength
 
-            print(f"{modifyLength}: {halfFloor}")
-
         print(f"Search in {time.time() - start}")
-        print(result["index"])
         start = time.time()
 
-        #A list of 10 videos which are similar is shown to the user.
+        #Assuming a result is found; a list of 10 videos which are similar is
+        #shown to the user.
         if result != None:
             returnList = []
-            returnList.append(result)
 
             for i in range(1, 6):
-                try:
-                    returnList.append(allDocs[result["index"] + i])
-                    returnList.append(allDocs[result["index"] - i])
-                
-                except IndexError:
-                    continue
-                
+                returnList.append(allDocs[result["index"] + i])
+                returnList.append(allDocs[result["index"] - i])
 
-            for video in returnList:
+            for index, video in enumerate(returnList):
                 video["sDiff"] = abs(int(video["hashDec"]) - self.hashDec)
 
             returnList = sorted(returnList, key=itemgetter('sDiff')) 
