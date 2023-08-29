@@ -94,10 +94,7 @@ class main:
                     if index > 9:
                         break
 
-
-                    #First checking for montioned accounts that we might not have
-                    #stored yet.
-                    #First checking for montioned accounts that we might not have
+                    #First checking for mentioned accounts that we might not have
                     #stored yet.
                     self.lists = self.findTelUsers(post.outlinks, self.lists)
 
@@ -308,17 +305,17 @@ class main:
 
         for link in outlinks:
 
-            if link.find("https://t.me/s/") != -1:
-                telURL = "https://t.me/s/"
-                
-            elif link.find("https://t.me/") != -1:
-                telURL = "https://t.me/"
-
-            elif link.find("https://t.me/s/+") != -1:
+            if link.find("https://t.me/s/+") != -1:
                 continue
 
             elif link.find("https://t.me/+") != -1:
                 continue
+        
+            elif link.find("https://t.me/s/") != -1:
+                telURL = "https://t.me/s/"
+                
+            elif link.find("https://t.me/") != -1:
+                telURL = "https://t.me/"
             
             else:
                 continue
