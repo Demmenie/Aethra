@@ -1,4 +1,4 @@
-//22/11/2022
+//08/07/2023
 //Chico Demmenie
 //Aethra/web/render.js
 
@@ -30,30 +30,38 @@ const renderer = (list) => {
             //Adding the upload datetime to the post.
             const uTime = postList[post]["uploadTime"];
             const date = new Date(uTime * 1000).toUTCString();
-            const tweetID = postList[post]["id"]
+            const postID = postList[post]["id"]
+            const platform = postList[post]["platform"]
+            const author = postList[post]["author"]
             
             /* Adding the time and calling the Client-side function to display
                 the tweet.*/
             page.push(`<p id="datetime" class="meta">${date}</p>`)
-            page.push(`<script type="text/javascript">organise("${tweetID}"** "post-${vid}-${post}")</script>`)
+            page.push(`<script type="text/javascript">organise("${postID}"**`+
+            `"${author}"** "${platform}"** "post-${vid}-${post}")</script>`)
             page.push('</div>')
 
             //Creating a meta div for metadata.
             page.push('<div class="meta">')
+            
+            //Creating a link to the original post.
+            if (platform == "twitter"){
+                page.push(`<a href="https://twitter.com/${author}/
+                    status/${postList[post]["id"]}" target="_blank">`)
+
+            } else if (platform == "telegram") {
+                page.push(`<a href="https://t.me/${author}/
+                    ${postList[post]["id"]}" target="_blank">`)
+            }
+            page.push('<p id="source" class="meta">Source</p></a>')
 
             //Showing the author.
-            author = postList[post]["author"]
             page.push(`<p id="author" class="meta">
                 Author: @${author}</p>`)
 
             //Showing the caption on the post.
             page.push(`<p id="caption" class="meta">Caption: 
                 "${postList[post]["text"]}"</p>`)
-
-            //Creating a link to the original post.
-            page.push(`<a href="https://twitter.com/${author}/
-                status/${postList[post]["id"]} target="_blank">`)
-            page.push('<p id="source" class="meta">Source</p></a>')
 
             //Closing the meta div and the span
             page.push('</div></span>')

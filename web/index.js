@@ -8,7 +8,7 @@ const path = require('path');
 const fs = require('fs');
 const morgan = require('morgan');
 const pb = require('python-bridge');
-const python = pb({pythonPath: 'python3', python: 'python3'});
+const python = pb({pythonPath: 'python', python: 'python'});
 const pageRender = require('./render');
 require('dotenv').config({path: './config.env'});
 
@@ -114,7 +114,7 @@ const server = () => {
     // =================================
     // Returns the about page.
     this.app.get('/about', (req, res) => {
-        res.sendFile(path.join(__dirname, "templates/about.html"));
+        res.render('about', {listCount: this.uListCount});
     })
 
     // =================================
@@ -244,6 +244,7 @@ const getList = () => {
             }
             refresh.bind(this)().then(function(uList){
                 this.uList = uList
+                this.uListCount = uList.length
                 console.log(`${time}: returned`)
             }.bind(this))
 

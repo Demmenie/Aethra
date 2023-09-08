@@ -1,6 +1,6 @@
-#29/10/2022
+#07/08/2023
 #Chico Demmenie
-#Aethra/Scraper/MongoAccess.py
+#Aethra/crawler/MongoAccess.py
 
 #Importing dependencies
 import pymongo
@@ -8,6 +8,7 @@ import requests
 import urllib3
 import http
 import json
+import bson
 import time
 import datetime
 import time
@@ -24,32 +25,47 @@ class mongoServe:
         """Initialises the class and gets mongoDB client"""
 
         keyFile = open("../data/keys.json", "r")
-        keys = json.loads(keyFile.read())
+        self.keys = json.loads(keyFile.read())
         keyFile.close()
 
-        mongoPass = keys["mongoPass"]
-        mongoCluster = keys["mongoCluster"]
-        mongoAccount = keys["mongoAccount"]
+        self.lockID = bson.ObjectId("64adabb65fa42c8c80b3931a")
+        self.listsID = bson.ObjectId("64adabd75fa42c8c80b3931b")
+
+        mongoPass = self.keys["mongoPass"]
+        mongoCluster = self.keys["mongoCluster"]
+        mongoAccount = self.keys["mongoAccount"]
         conn = ''.join(f"mongodb+srv://{mongoAccount}:{mongoPass}"+
             f"{mongoCluster}.mongodb.net/{mongoAccount}"+
             "?retryWrites=true&w=majority")
 
-        #Setting a 5-second connection timeout so that we're not pinging the
+        #Setting a 30 second connection timeout so that we're not pinging the
         #server endlessly
-        self.client = pymongo.MongoClient(conn,
-            tls=True,
-            serverSelectionTimeoutMS=5000)
+        responding = False
+        while not responding:
+
+            try:
+                self.client = pymongo.MongoClient(conn,
+                    tls=True,
+                    serverSelectionTimeoutMS=30000)
+                responding = True
+                
+            except pymongo.errors.ConfigurationError as err:
+                print(print(f"[{datetime.datetime.now()}] Caught: {err}",
+                    "sleeping 60 secs."))
+                time.sleep(60)
+
 
         #Setting the class wide variables that connect to the database and the
         #MilVec collection.
         self.db = self.client.Aethra
-        self.video = self.db.video2
+        self.video = self.db.video3
+        self.lists = self.db.lists
         self.backup = self.db.backup
 
 
     #A function that checks if the vehicle already exists.
     #---------------------------------------------------------------------------
-    def entryCheck(self, id, hashHex, hashDec):
+    def entryCheck(self, id, author, hashHex, hashDec):
 
         """
         Desc: Checks any entry against the database to see if the entry already
@@ -88,6 +104,11 @@ class mongoServe:
                 print(print(f"[{datetime.datetime.now()}] Caught: {err}",
                     "sleeping 60 secs."))
                 time.sleep(60)
+
+            except pymongo.errors.AutoReconnect as err:
+                print(print(f"[{datetime.datetime.now()}] Caught: {err}",
+                    "sleeping 60 secs."))
+                time.sleep(60)
                 
             except requests.exceptions.ConnectionError as err:
                 print(print(f"[{datetime.datetime.now()}] Caught: {err}",
@@ -112,6 +133,7 @@ class mongoServe:
 
         #Defining values for the while loop
         result = None
+        endIndex = None
         halfLength = length / 2
         modifyLength = copy.copy(halfLength)
         searching = True
@@ -137,8 +159,8 @@ class mongoServe:
                 int(ceilDoc["hashDec"]) > hashDec):
 
                 result = None
+                endIndex = floorDoc["index"]
                 searching = False
-                break
 
             #If either of the docs are None then we've reached the top
             #or bottom.
@@ -165,10 +187,19 @@ class mongoServe:
             if result != None:
                 for post in result["postList"]:
 
-                    if post["id"] == str(id):
+                    if post["id"] == str(id) and post["author"] == author:
                         result = "preexist"
                         break
+    
+        #Checking similar videos to reduce duplicates.
+        if result == None and endIndex != None:
+            searchList = self.allDocs[endIndex-5:endIndex+5]
 
+            for vid in searchList:
+                for post in vid["postList"]:
+
+                    if post["id"] == str(id) and post["author"] == author:
+                        result == "preexist"
 
         #Returning what we've found
         print(f"[{datetime.datetime.now()}] {result}")
@@ -197,6 +228,7 @@ class mongoServe:
                 #requesting all the documents in the database.
                 self.allDocs = list(self.video.find({}).sort("index"))
                 length = len(self.allDocs)
+
 
                 #Creating a while loop to do binary search on the database.
                 halfLength = length / 2
@@ -230,15 +262,28 @@ class mongoServe:
                     elif (ceilDoc["index"] == (length - 1) and
                         int(ceilDoc["hashDec"]) < post.hashDec):
 
-                        index = ceilDoc["index"]
+                        index = ceilDoc["index"] + 1
                         searching = False
-
 
                     elif int(ceilDoc["hashDec"]) < post.hashDec:
                         halfLength = halfLength + modifyLength
 
                     elif int(floorDoc["hashDec"]) > post.hashDec:
                         halfLength = halfLength - modifyLength
+
+
+                locked = False
+                while not locked:
+                    
+                    dataLock = self.lists.find_one(
+                        {"_id": self.lockID})["dataLock"]
+                    
+                    if not dataLock:
+                        self.lists.update_one(
+                            {"_id": self.lockID},
+                            {"$set": {"dataLock": True}})
+                        
+                        locked = True
 
 
                 #Once we've found our index, we need to change the index of
@@ -265,35 +310,68 @@ class mongoServe:
                 self.video.insert_one(dataEntry)
                 print(f"[{datetime.datetime.now()}]", str(dataEntry))
 
+                self.lists.update_one(
+                    {"_id": self.lockID},
+                    {"$set": {"dataLock": False}})
+
                 responding = True
+
 
             except pymongo.errors.NetworkTimeout as err:
                 print(f"[{datetime.datetime.now()}] Caught: {err}, sleeping 60")
                 time.sleep(60)
+                
+                self.lists.update_one(
+                    {"_id": self.lockID},
+                    {"$set": {"dataLock": False}})
 
             except pymongo.errors.ServerSelectionTimeoutError as err:
                 print(f"[{datetime.datetime.now()}] Caught: {err}, sleeping 60")
                 time.sleep(60)
+                
+                self.lists.update_one(
+                    {"_id": self.lockID},
+                    {"$set": {"dataLock": False}})
+
+            except pymongo.errors.AutoReconnect as err:
+                print(f"[{datetime.datetime.now()}] Caught: {err}, sleeping 60")
+                time.sleep(60)
+                
+                self.lists.update_one(
+                    {"_id": self.lockID},
+                    {"$set": {"dataLock": False}})
 
             except requests.exceptions.ConnectionError as err:
-                print(print(f"[{datetime.datetime.now()}] Caught: {err}",
-                    "sleeping 60 secs."))
+                print(f"[{datetime.datetime.now()}] Caught: {err}, sleeping 60")
                 time.sleep(60)
+                
+                self.lists.update_one(
+                    {"_id": self.lockID},
+                    {"$set": {"dataLock": False}})
 
             except urllib3.exceptions.ProtocolError as err:
-                print(print(f"[{datetime.datetime.now()}] Caught: {err}",
-                    "sleeping 60 secs."))
+                print(f"[{datetime.datetime.now()}] Caught: {err}, sleeping 60")
                 time.sleep(60)
+                
+                self.lists.update_one(
+                    {"_id": self.lockID},
+                    {"$set": {"dataLock": False}})
 
             except http.client.RemoteDisconnected as err:
-                print(print(f"[{datetime.datetime.now()}] Caught: {err}",
-                    "sleeping 60 secs."))
+                print(f"[{datetime.datetime.now()}] Caught: {err}, sleeping 60")
                 time.sleep(60)
+                
+                self.lists.update_one(
+                    {"_id": self.lockID},
+                    {"$set": {"dataLock": False}})
 
             except ConnectionResetError as err:
-                print(print(f"[{datetime.datetime.now()}] Caught: {err}",
-                    "sleeping 60 secs."))
+                print(f"[{datetime.datetime.now()}] Caught: {err}, sleeping 60")
                 time.sleep(60)
+                
+                self.lists.update_one(
+                    {"_id": self.lockID},
+                    {"$set": {"dataLock": False}})
 
 
     #---------------------------------------------------------------------------
@@ -332,6 +410,11 @@ class mongoServe:
                 print(f"[{datetime.datetime.now()}] Caught: {err}, sleeping 60")
                 time.sleep(60)
 
+            except pymongo.errors.AutoReconnect as err:
+                print(print(f"[{datetime.datetime.now()}] Caught: {err}",
+                    "sleeping 60 secs."))
+                time.sleep(60)
+
             except requests.exceptions.ConnectionError as err:
                 print(print(f"[{datetime.datetime.now()}] Caught: {err}",
                     "sleeping 60 secs."))
@@ -364,9 +447,24 @@ class mongoServe:
         while not responding:
 
             try:
+
                 self.allDocs = list(self.video.find({}).sort("index"))
 
+                #Attaining data lock before altering the DB
+                locked = False
+                while not locked:
 
+                    dataLock = self.lists.find_one(
+                        {"_id": self.lockID})["dataLock"]
+                    
+                    if not dataLock:
+                        self.lists.update_one(
+                            {"_id": self.lockID},
+                            {"$set": {"dataLock": True}})
+                        
+                        locked = True
+
+                #Backing everything up.
                 for doc in self.allDocs:
 
                     self.backup.update_one({"index": doc["index"]},
@@ -377,35 +475,79 @@ class mongoServe:
 
                     responding = True
 
+                self.lists.update_one(
+                    {"_id": self.lockID},
+                    {"$set": {"dataLock": False}})
+
             except pymongo.errors.NetworkTimeout as err:
-                print(print(f"[{datetime.datetime.now()}] Caught: {err}",
-                    "sleeping 60 secs."))
+                print(f"[{datetime.datetime.now()}] Caught: {err}, sleeping 60")
                 time.sleep(60)
+                
+                self.lists.update_one(
+                    {"_id": self.lockID},
+                    {"$set": {"dataLock": False}})
 
             except pymongo.errors.ServerSelectionTimeoutError as err:
-                print(print(f"[{datetime.datetime.now()}] Caught: {err}",
-                    "sleeping 60 secs."))
+                print(f"[{datetime.datetime.now()}] Caught: {err}, sleeping 60")
                 time.sleep(60)
+                
+                self.lists.update_one(
+                    {"_id": self.lockID},
+                    {"$set": {"dataLock": False}})
+
+            except pymongo.errors.AutoReconnect as err:
+                print(f"[{datetime.datetime.now()}] Caught: {err}, sleeping 60")
+                time.sleep(60)
+                
+                self.lists.update_one(
+                    {"_id": self.lockID},
+                    {"$set": {"dataLock": False}})
 
             except requests.exceptions.ConnectionError as err:
-                print(print(f"[{datetime.datetime.now()}] Caught: {err}",
-                    "sleeping 60 secs."))
+                print(f"[{datetime.datetime.now()}] Caught: {err}, sleeping 60")
                 time.sleep(60)
+                
+                self.lists.update_one(
+                    {"_id": self.lockID},
+                    {"$set": {"dataLock": False}})
 
             except urllib3.exceptions.ProtocolError as err:
-                print(print(f"[{datetime.datetime.now()}] Caught: {err}",
-                    "sleeping 60 secs."))
+                print(f"[{datetime.datetime.now()}] Caught: {err}, sleeping 60")
                 time.sleep(60)
+                
+                self.lists.update_one(
+                    {"_id": self.lockID},
+                    {"$set": {"dataLock": False}})
 
             except http.client.RemoteDisconnected as err:
-                print(print(f"[{datetime.datetime.now()}] Caught: {err}",
-                    "sleeping 60 secs."))
+                print(f"[{datetime.datetime.now()}] Caught: {err}, sleeping 60")
                 time.sleep(60)
+                
+                self.lists.update_one(
+                    {"_id": self.lockID},
+                    {"$set": {"dataLock": False}})
 
             except ConnectionResetError as err:
-                print(print(f"[{datetime.datetime.now()}] Caught: {err}",
-                    "sleeping 60 secs."))
+                print(f"[{datetime.datetime.now()}] Caught: {err}, sleeping 60")
                 time.sleep(60)
+                
+                self.lists.update_one(
+                    {"_id": self.lockID},
+                    {"$set": {"dataLock": False}})
+
+    def getLists(self):
+
+        """Returns lists object from the database."""
+
+        lists = self.lists.find_one({"_id": self.listsID})
+
+        return lists
+    
+
+    def appendLists(self, type, username):
+
+        self.lists.update_one({"_id": self.listsID},
+                              {"$push": {type: username}})
 
 
 #-------------------------------------------------------------------------------
