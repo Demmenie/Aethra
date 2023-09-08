@@ -335,7 +335,7 @@ class main:
 
 
             if username not in lists["telegram"]:
-                print(f"[{datetime.datetime.now()}] {username} added.")
+                print(f"[{datetime.datetime.now()}] {username} added to telegram list.")
                 mongoServe().appendLists("telegram", username)
                 lists["telegram"].append(username)
         

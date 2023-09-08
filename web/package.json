@@ -1,10 +1,10 @@
 {
     "name": "aethra",
-    "version": "0.3",
+    "version": "0.4",
     "description": "A reverse video search engine.",
     "main": "index.js",
     "scripts": {
-        "start": "node index.js",
+        "start": "nodemon index.js",
         "install": "set DEBUG=app"
     },
     "author": "Chico Demmenie",
