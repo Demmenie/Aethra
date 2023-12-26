@@ -2,7 +2,7 @@
 FROM node:18
 
 # Install Python 3.10 and pip3
-RUN apt-get update && apt-get install -y python3.10
+RUN apt-get update && apt-get -y upgrade && apt-get install -y python3.10
 RUN apt-get install -y python3-pip && apt install -y ffmpeg
 
 # Set the working directory to /app
