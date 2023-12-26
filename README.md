@@ -1,6 +1,6 @@
 # Aethra
 
-![Static Badge](https://img.shields.io/badge/version-0.4.0-green)
+![Static Badge](https://img.shields.io/badge/version-0.4.1-green)
 
 
 A tool used to do reverse video searches.
