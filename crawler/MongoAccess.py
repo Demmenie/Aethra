@@ -340,6 +340,14 @@ class mongoServe:
                 self.lists.update_one(
                     {"_id": self.lockID},
                     {"$set": {"dataLock": False}})
+                
+            except pymongo.errors.CursorNotFound as err:
+                print(f"[{datetime.datetime.now()}] Caught: {err}, sleeping 60")
+                time.sleep(60)
+                
+                self.lists.update_one(
+                    {"_id": self.lockID},
+                    {"$set": {"dataLock": False}})
 
             except requests.exceptions.ConnectionError as err:
                 print(f"[{datetime.datetime.now()}] Caught: {err}, sleeping 60")
