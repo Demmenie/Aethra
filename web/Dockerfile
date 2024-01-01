@@ -1,5 +1,5 @@
 # Use the official Node.js 18 image as a base
-FROM node:18
+FROM node:20
 
 # Install Python 3.10 and pip3
 RUN apt-get update && apt-get -y upgrade && apt-get install -y python3.10
