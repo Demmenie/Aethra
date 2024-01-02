@@ -3,6 +3,7 @@
  *  Aethra/web/index.js
  */
 
+const version = require('./package').version;
 const express = require('express');
 const path = require('path');
 const fs = require('fs');
@@ -23,6 +24,8 @@ sys.modules["search"] = search
 spec.loader.exec_module(search)
 DBSearch = search.DBSearch()
 `
+
+const year = new Date().getFullYear()
 
 
 //------------------------------------------------------------------------------
@@ -53,7 +56,7 @@ const server = () => {
     // takes request, response
     this.app.get('/', (req, res) => {
         // Render page
-        res.sendFile(path.join(__dirname, "templates/index.html"));
+        res.render('index', {year: year, version: version});
     });
 
     //Listens listens for the search form to be returned.
@@ -91,7 +94,8 @@ const server = () => {
                     /*If the search returns 'null' then there's nothing to
                     show the user*/
                     if (sResponse == null) {
-                        res.render('notFound', {searchTerm: req.query.q});
+                        res.render('notFound', {searchTerm: req.query.q,
+                            year: year, version: version});
                     } else if (sResponse == "download_failed"){
                         sendErr(req, res, 500);
                     } else {
@@ -100,8 +104,8 @@ const server = () => {
                         page = page.replaceAll("**", ",");
                         
                         res.render('search',
-                        {page: page,
-                            searchTerm: req.query.q});
+                        {page: page, searchTerm: req.query.q, year: year,
+                            version: version});
                     }
                 }.bind(pageRender));
 
@@ -114,13 +118,15 @@ const server = () => {
     // =================================
     // Returns the about page.
     this.app.get('/about', (req, res) => {
-        res.render('about', {listCount: this.uListCount});
+        res.render('about', {listCount: this.uListCount, year: year, 
+            version: version});
     })
 
     // =================================
     // Sends a specific page when the search term isn't clean.
     this.app.get('/url_deny', (req, res) => {
-        res.render('url_deny', {searchTerm: req.query.q});
+        res.render('url_deny', {searchTerm: req.query.q, year: year, 
+            version: version});
     });
 
     // =================================
@@ -169,8 +175,7 @@ const server = () => {
     });
 
     this.app.get(`/offline`, (req, res) => {
-        const assetPath = path.join(__dirname, "templates/offline.html");
-        res.sendFile(assetPath);
+        res.render('offline', {url: req.url, year: year, version: version});
     });
 
     this.app.get(`/favicon.ico`, (req, res) => {
@@ -203,7 +208,7 @@ const server = () => {
         // respond with html page rendered with the correct message
         if (req.accepts('html')) {
             res.render('error', {url: req.url, error: title,
-            text: text});
+            text: text, year: year, version: version});
             return;
         }
       
