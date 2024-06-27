@@ -1,6 +1,6 @@
 {
     "name": "aethra",
-    "version": "0.5",
+    "version": "0.5.0",
     "description": "A reverse video search engine.",
     "main": "index.js",
     "scripts": {
