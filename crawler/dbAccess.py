@@ -5,6 +5,8 @@
 import os
 import json
 import copy
+import uuid
+import datetime
 from google.cloud.sql.connector import Connector, IPTypes
 import pg8000
 import sqlalchemy
@@ -59,7 +61,7 @@ class dbAccess:
 
     #A function that checks if the vehicle already exists.
     #---------------------------------------------------------------------------
-    def entryCheck(self, id, author, hashDec, hashHex):
+    def entryCheck(self, id, author, hashHex):
 
         """
         Desc: Checks any entry against the database to see if the entry already
@@ -68,39 +70,54 @@ class dbAccess:
         Input:
             - self
             - id
+            - author
             - hashHex
-            - HashDec
 
         Returns:
             - Result:
                 - None (Means it isn't in the database),
                 - "preexist" (Means that post has already been entered before)
-                - Video object (Means that the video has been seen before but 
+                - Video tuple (Means that the video has been seen before but 
                     the post hasn't been entered yet.)
         """
 
         print(f"[{datetime.datetime.now()}] entryCheck()")
 
-        #COnnect to the database
-        conn = self.connector.connect()
+        #Connecting to the database.
+        self.conn = self.connector.connect()
 
-        #Looking for videos that match the Hash
-        results = conn.execute(
-            sqlalchemy.text(f"SELECT * FROM videos WHERE hashHex='{hashHex}'"))
+        #Looking for the post in the database.
+        post = self.conn.execute(
+            sqlalchemy.text(
+                f"SELECT * FROM posts WHERE author='{author}' AND "+
+                f"postID='{id}'"
+            )
+        ).fetchone()
         
-        conn.close()
+        #If the post is already there then return "preexist"
+        if post != None:
+            self.conn.close()
+            return "preexist"
+        
+        #If the post isn't already there then we look for hte video itself.
+        else:
 
-        result = None
-        for video in results.fetchall():
+            #Looking for videos that match the Hash
+            result = self.conn.execute(
+                sqlalchemy.text(
+                    f"SELECT * FROM videos WHERE hashHex='{hashHex}'"
+                )
+            ).fetchone()
 
-            if video[3] == hashHex:
-                result = copy.copy(video)
-
-        return result
+            self.conn.close()
+            
+            #If the video isn't there we'll get "None", if it is we return the
+            #object.
+            return result
     
 
     #---------------------------------------------------------------------------
-    def newEntry(self, post):
+    def newVid(self, post):
 
         """
         Desc: Creates a new video entry.
@@ -108,14 +125,122 @@ class dbAccess:
         Input:
             - self
             - post (An object describing the post that needs to be entered.)
-        
-        Output:
-            - Adds a new video object to the database 
+
+
+        OutPut:
+            - vidID
+            - postID
         """
 
         print(f"[{datetime.datetime.now()}] newEntry()")
 
+        #Connect to the database
+        self.conn = self.connector.connect()
+
+        #Finding the nearest entry that has a hashDec less than our post.
+        vidPlaceBottom = self.conn.execute(
+            sqlalchemy.text(
+                "SELECT index, MAX(hashDec) FROM videos "+
+                f"WHERE hashDec < {post.hashDec}"
+            )
+        ).fetchone()
+
+        #Finding the nearest entry that has a hashDec more than our post.
+        vidPlaceTop = self.conn.execute(
+            sqlalchemy.text(
+                "SELECT index, MIN(hashDec) FROM videos "+
+                f"WHERE hashDec > {post.hashDec}"
+            )
+        ).fetchone()
+
+        #Checking that the two posts are next to each other.
+        if vidPlaceBottom[0] == (vidPlaceTop[0] - 1):
+            
+            #Updating all of the videos above this one so that the index
+            #increases by one.
+            self.conn.execute(
+                sqlalchemy.text(
+                    "UPDATE videos "+
+                    "SET index = index + 1 "+
+                    f"WHERE index >= {vidPlaceTop[0]}"
+                )
+            )
+            self.conn.commit()
+
+            #Adding the new video to the "videos" table.
+            vidID = uuid.uuid4()
+            
+            self.conn.execute(
+                sqlalchemy.text(
+                    "INSERT INTO videos "+
+                    f"VALUES ({vidPlaceTop[0]}, {vidID}, {str(post.hashDec)}, "+
+                    f"{post.hashHex})"
+                )
+            )
+            self.conn.commit()
+
+            self.conn.close()
+
+            #Adding the post to the "posts" table.
+            postID = self.addPost(post, vidID)
+
+            return vidID, postID
+
+
+    #---------------------------------------------------------------------------
+    def addPost(self, post, vidID):
+        """
+        Desc: adds a new post to the "posts" table.
+
+        Input:
+            - self
+            - post
+            - vidID
+
+        Output:
+            - postID
+        """
+
+        #Connecting to the database.
+        self.conn = self.connector.connect()
+
+        #Creating a new id for this post.
+        postID = uuid.uuid4()
+
+        #Finding the max index.
+        maxPostIndex = self.conn.execute(
+            sqlalchemy.text(
+                "SELECT MAX(index) FROM videos"
+            )
+        ).fetchone()
+
+        #Adding the new post to the "posts" table.
+        self.conn.execute(
+            sqlalchemy.text(
+                "INSERT INTO posts "+
+                f"VALUES ({(maxPostIndex[0] + 1)}, {vidID}, "+
+                f"{post['platform']}, {postID}, {post['author']}, "+
+                f"{post['text']}, {post['timestamp']}, {post['uploadTime']})"
+            )
+        )
+        
+        #Closing the connection.
+        self.conn.commit()
+        self.conn.close()
+
+        return postID
+
 
 if __name__ == "__main__":
 
-    print(f"result: {dbAccess().entryCheck(None, None, 1, '1')}")
+    post = {
+        "platform": "telegram",
+        "id": "1",
+        "author": "jimbob",
+        "text": "hello",
+        "timestamp": 2,
+        "uploadTime": 1
+        }
+
+    #print(dbAccess().entryCheck(1, "mr.fox", 1))
+    print(dbAccess().addPost(post, uuid.UUID("b21faea0-adbe-11ee-abe9-42010a2da002")))
