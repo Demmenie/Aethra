@@ -3,13 +3,16 @@
 #Aethra/Crawler/dbAccess
 
 import os
+import logging
 import json
-import copy
-import uuid
 import datetime
+import uuid
+import time
 from google.cloud.sql.connector import Connector, IPTypes
 import pg8000
 import sqlalchemy
+from sqlalchemy import text
+
 
 class dbAccess:
 
@@ -61,7 +64,7 @@ class dbAccess:
 
     #A function that checks if the vehicle already exists.
     #---------------------------------------------------------------------------
-    def entryCheck(self, id, author, hashHex):
+    def entryCheck(self, platform, id, author, hashHex):
 
         """
         Desc: Checks any entry against the database to see if the entry already
@@ -83,14 +86,15 @@ class dbAccess:
 
         print(f"[{datetime.datetime.now()}] entryCheck()")
 
+
         #Connecting to the database.
         self.conn = self.connector.connect()
 
         #Looking for the post in the database.
         post = self.conn.execute(
             sqlalchemy.text(
-                f"SELECT * FROM posts WHERE author='{author}' AND "+
-                f"postID='{id}'"
+                f"SELECT * FROM posts WHERE platform='{platform}' AND "+
+                f"author='{author}' AND postID='{id}'"
             )
         ).fetchone()
         
@@ -117,74 +121,111 @@ class dbAccess:
     
 
     #---------------------------------------------------------------------------
-    def newVid(self, post):
+    def newVid(self, post, hashDec, hashHex):
 
         """
-        Desc: Creates a new video entry.
+        Desc: Checks if the video already exists and creates a new video entry.
         
         Input:
             - self
             - post (An object describing the post that needs to be entered.)
+            - hashDec (An integer of the hash)
+            - hashHex (A hexadercimal string of the hash)
 
 
         OutPut:
             - vidID
-            - postID
+            - postIndex
+            or
+            - "preexist"
         """
 
-        print(f"[{datetime.datetime.now()}] newEntry()")
+        print(f"[{datetime.datetime.now()}] newVid()")
+
 
         #Connect to the database
         self.conn = self.connector.connect()
 
-        #Finding the nearest entry that has a hashDec less than our post.
-        vidPlaceBottom = self.conn.execute(
+        #Checking that the video isn't already in the DB.
+        vidCheck = self.conn.execute(
             sqlalchemy.text(
-                "SELECT index, MAX(hashDec) FROM videos "+
-                f"WHERE hashDec < {post.hashDec}"
+                "SELECT * FROM videos "+
+                f"WHERE hashHex = {hashHex}::varchar(255)"
             )
         ).fetchone()
 
-        #Finding the nearest entry that has a hashDec more than our post.
-        vidPlaceTop = self.conn.execute(
-            sqlalchemy.text(
-                "SELECT index, MIN(hashDec) FROM videos "+
-                f"WHERE hashDec > {post.hashDec}"
-            )
-        ).fetchone()
+        if vidCheck != None:
+            return "preexist"
+        
+        else:
 
-        #Checking that the two posts are next to each other.
-        if vidPlaceBottom[0] == (vidPlaceTop[0] - 1):
-            
-            #Updating all of the videos above this one so that the index
-            #increases by one.
-            self.conn.execute(
+            #Finding the nearest entry that has a hashDec less than our post.
+            vidPlaceBottom = self.conn.execute(
                 sqlalchemy.text(
-                    "UPDATE videos "+
-                    "SET index = index + 1 "+
-                    f"WHERE index >= {vidPlaceTop[0]}"
+                    "SELECT index, MAX(hashDec) FROM videos "+
+                    f"WHERE hashDec < {hashDec} "+
+                    "GROUP BY videos.index"
                 )
-            )
-            self.conn.commit()
+            ).fetchone()
 
-            #Adding the new video to the "videos" table.
-            vidID = uuid.uuid4()
-            
-            self.conn.execute(
+            #Finding the nearest entry that has a hashDec more than our post.
+            vidPlaceTop = self.conn.execute(
                 sqlalchemy.text(
-                    "INSERT INTO videos "+
-                    f"VALUES ({vidPlaceTop[0]}, {vidID}, {str(post.hashDec)}, "+
-                    f"{post.hashHex})"
+                    "SELECT index, MIN(hashDec) FROM videos "+
+                    f"WHERE hashDec > {hashDec} "+
+                    "GROUP BY videos.index"
                 )
-            )
-            self.conn.commit()
+            ).fetchone()
 
-            self.conn.close()
+            #If the video is going to the top or bottom of the DB it still needs
+            #to know where it's going.
+            if vidPlaceTop == None:
+                vidPlaceTop = (vidPlaceBottom[0] + 1, )
 
-            #Adding the post to the "posts" table.
-            postID = self.addPost(post, vidID)
+            elif vidPlaceBottom == None:
+                vidPlaceBottom = (vidPlaceTop[0] + 1, )
 
-            return vidID, postID
+            print(vidPlaceTop, vidPlaceBottom)
+            #Checking that the two posts are next to each other.
+            if vidPlaceBottom[0] == (vidPlaceTop[0] - 1):
+                
+                #Updating all of the videos above this one so that the index
+                #increases by one.
+                self.conn.execute(
+                    sqlalchemy.text(
+                        "UPDATE videos "+
+                        "SET index = index + 1 "+
+                        f"WHERE index >= {vidPlaceTop[0]}"
+                    )
+                )
+                self.conn.commit()
+
+                #Adding the new video to the "videos" table.
+                vidID = uuid.uuid4()
+
+                #Adding the new post to the "posts" table.
+                stmt = text("INSERT INTO videos VALUES (:index, :id, :hashDec, "+
+                            ":hashHex)")
+                values = {
+                    "index": vidPlaceTop[0],
+                    "id": vidID,
+                    "hashDec": hashDec,
+                    "hashHex": hashHex
+                }
+                self.conn.execute(stmt, values)
+                self.conn.commit()
+
+                self.conn.close()
+
+                #Adding the post to the "posts" table.
+                postIndex = self.addPost(post, vidID)
+
+                return vidID, postIndex
+            
+            else:
+                self.conn.close()
+                logging.error("Unable to find adjacent entries.")
+
 
 
     #---------------------------------------------------------------------------
@@ -198,14 +239,14 @@ class dbAccess:
             - vidID
 
         Output:
-            - postID
+            - index
         """
+
+        print(f"[{datetime.datetime.now()}] newVid()")
+
 
         #Connecting to the database.
         self.conn = self.connector.connect()
-
-        #Creating a new id for this post.
-        postID = uuid.uuid4()
 
         #Finding the max index.
         maxPostIndex = self.conn.execute(
@@ -214,22 +255,29 @@ class dbAccess:
             )
         ).fetchone()
 
+        maxPostIndex = maxPostIndex[0]
+        
         #Adding the new post to the "posts" table.
-        self.conn.execute(
-            sqlalchemy.text(
-                "INSERT INTO posts "+
-                f"VALUES ({(maxPostIndex[0] + 1)}, {vidID}, "+
-                f"{post['platform']}, {postID}, {post['author']}, "+
-                f"{post['text']}, {post['timestamp']}, {post['uploadTime']})"
-            )
-        )
+        stmt = text("INSERT INTO posts VALUES (:index, :vidID, :platform, "+
+                    ":postID, :author, :text, :timestamp, :uploadTime)")
+        values = {
+            "index": maxPostIndex + 1,
+            "vidID": vidID,
+            "platform": post['platform'],
+            "postID": post['id'],
+            "author": post['author'],
+            "text": post['text'],
+            "timestamp": post['timestamp'],
+            "uploadTime": post['uploadTime']
+        }
+        self.conn.execute(stmt, values)
         
         #Closing the connection.
         self.conn.commit()
         self.conn.close()
 
-        return postID
-
+        return maxPostIndex
+        
 
 if __name__ == "__main__":
 
@@ -238,9 +286,13 @@ if __name__ == "__main__":
         "id": "1",
         "author": "jimbob",
         "text": "hello",
-        "timestamp": 2,
-        "uploadTime": 1
+        "timestamp": time.time(),
+        "uploadTime": time.time()
         }
+    
+    hashDec = 2
+    hashHex = "2"
 
-    #print(dbAccess().entryCheck(1, "mr.fox", 1))
-    print(dbAccess().addPost(post, uuid.UUID("b21faea0-adbe-11ee-abe9-42010a2da002")))
+    #print(dbAccess().entryCheck(1, "jimbob", 1))
+    #print(dbAccess().addPost(post, uuid.UUID("b21faea0-adbe-11ee-abe9-42010a2da002")))
+    print(dbAccess().newVid(post, hashDec, hashHex))
