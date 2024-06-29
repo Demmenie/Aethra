@@ -4,8 +4,10 @@
 
 import pymongo
 import json
+import bson
 import copy
 from MongoAccess import mongoServe
+from dbAccess import dbAccess
 import videohash
 import shutil
 import datetime
@@ -36,11 +38,12 @@ class maintenance:
         #Setting the class wide variables that connect to the database and the
         #MilVec collection.
         self.db = self.client.Aethra
-        self.video = self.db.video
+        self.video = self.db.video3
         self.allDocs = list(self.video.find({}).sort("index"))
         self.count = self.video.count_documents({})
+        self.lists = list(self.db.lists.find({"_id": bson.ObjectId("64adabd75fa42c8c80b3931b")}))
 
-        #self.ms = mongoServe()
+        self.dba = dbAccess()
 
 
     def orderCheck(self):
@@ -129,15 +132,22 @@ class maintenance:
         """Transfers the database from one collection to another, transforming
             it in some way."""
 
-        
+        print("refactor")
 
-        for doc in self.allDocs[3154:]:
+        for doc in self.allDocs:
+
+            print(doc["index"])
 
             for post in doc["postList"]:
 
+                print(post)
+
                 try:
-                    self.vh((f"https://twitter.com/{post['author']}/status/"+
-                        post["id"]))
+                    url = f"https://t.me/{post['author']}/{post['id']}"
+
+                    print(url)
+
+                    self.vh(url)
 
                 except videohash.exceptions.DownloadFailed as err:
                     print(f"Exception occurred:\n {err}"+
@@ -149,27 +159,26 @@ class maintenance:
                         "continuing.")
                     continue
 
-
                 class postCl:
                     hashHex = self.videoHashHex
                     hashDec = self.videoHashDec
-                    platform = "twitter"
+                    platform = "telegram"
                     id = str(post["id"])
                     author = post["author"]
                     text = post["text"]
                     timestamp = post["timestamp"]
                     uTime = post["uploadTime"]
 
-                check = mongoServe().entryCheck(postCl.id, postCl.hashHex,
-                    postCl.hashDec)
+                check = self.dba.entryCheck(postCl.platform, postCl.id,
+                    postCl.author, postCl.hashHex)
                 
                 if check != None and check != "preexist":
                     print(f"check: {check}")
-                    postCl.index = check["index"]
-                    mongoServe().addToEntry(postCl)
+                    postCl.index = check[0]
+                    self.dba.addPost(postCl, check[1])
 
                 elif check == None:
-                    mongoServe().newEntry(postCl)
+                    self.dba.newVid(postCl, postCl.hashDec, postCl.hashHex)
 
 
     def vh(self, url):
@@ -192,12 +201,29 @@ class maintenance:
             print("Error: %s - %s." % (e.filename, e.strerror))
 
 
+    def moveList(self):
+
+        print("Getting list from MongoDB.")
+        telList = self.lists["telegram"]
+
+        for user in telList:
+
+            if user.split()[0] != "+":
+
+                print(user)
+
+            else:
+                
+                print(f"not: {user}")
+
+
 if __name__ == "__main__":
     #if not maintenance().orderCheck():
         #if input("reOrder? ") in ["y", "Y", "Ye", "ye", "yes", "Yes"]:
             #maintenance().reOrder()
             #print(maintenance().orderCheck())
 
-    print(maintenance().duplicateCheck())
+    #print(maintenance().duplicateCheck())
+    #print(maintenance().orderCheck)
     maintenance().refactor()
     #maintenance().vh("https://twitter.com/aldin_aba/status/1570102341189177346")
