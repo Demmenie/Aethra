@@ -150,7 +150,7 @@ class dbAccess:
         vidCheck = self.conn.execute(
             sqlalchemy.text(
                 "SELECT * FROM videos "+
-                f"WHERE hashHex = {hashHex}::varchar(255)"
+                f"WHERE hashHex = '{hashHex}'"
             )
         ).fetchone()
 
@@ -162,20 +162,28 @@ class dbAccess:
             #Finding the nearest entry that has a hashDec less than our post.
             vidPlaceBottom = self.conn.execute(
                 sqlalchemy.text(
-                    "SELECT index, MAX(hashDec) FROM videos "+
-                    f"WHERE hashDec < {hashDec} "+
-                    "GROUP BY videos.index"
+                    "SELECT index, hashDec "+
+                    "FROM videos AS A "+
+                    "WHERE hashDec = "+ 
+                        "(SELECT MAX(hashDec) "+
+                        "FROM videos AS B "+
+                        f"WHERE hashDec < {hashDec});"
                 )
             ).fetchone()
 
             #Finding the nearest entry that has a hashDec more than our post.
             vidPlaceTop = self.conn.execute(
                 sqlalchemy.text(
-                    "SELECT index, MIN(hashDec) FROM videos "+
-                    f"WHERE hashDec > {hashDec} "+
-                    "GROUP BY videos.index"
+                    "SELECT index, hashDec "+
+                    "FROM videos AS A "+
+                    "WHERE hashDec = "+ 
+                        "(SELECT MIN(hashDec) "+
+                        "FROM videos AS B "+
+                        f"WHERE hashDec > {hashDec});"
                 )
             ).fetchone()
+
+            print(vidPlaceTop, vidPlaceBottom)
 
             #If the video is going to the top or bottom of the DB it still needs
             #to know where it's going.
@@ -242,7 +250,7 @@ class dbAccess:
             - index
         """
 
-        print(f"[{datetime.datetime.now()}] newVid()")
+        print(f"[{datetime.datetime.now()}] addPost()")
 
 
         #Connecting to the database.
@@ -263,12 +271,12 @@ class dbAccess:
         values = {
             "index": maxPostIndex + 1,
             "vidID": vidID,
-            "platform": post['platform'],
-            "postID": post['id'],
-            "author": post['author'],
-            "text": post['text'],
-            "timestamp": post['timestamp'],
-            "uploadTime": post['uploadTime']
+            "platform": post.platform,
+            "postID": post.id,
+            "author": post.author,
+            "text": post.text,
+            "timestamp": post.timestamp,
+            "uploadTime": post.uTime
         }
         self.conn.execute(stmt, values)
         
