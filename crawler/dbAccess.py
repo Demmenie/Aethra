@@ -22,6 +22,7 @@ class dbAccess:
         self.keys = json.loads(keyFile.read())
         keyFile.close()
 
+        print("Connecting with SQL Database.")
         self.connector = self.connect_with_connector()
 
 
@@ -183,7 +184,6 @@ class dbAccess:
                 )
             ).fetchone()
 
-            print(vidPlaceTop, vidPlaceBottom)
 
             #If the video is going to the top or bottom of the DB it still needs
             #to know where it's going.
@@ -193,7 +193,6 @@ class dbAccess:
             elif vidPlaceBottom == None:
                 vidPlaceBottom = (vidPlaceTop[0] + 1, )
 
-            print(vidPlaceTop, vidPlaceBottom)
             #Checking that the two posts are next to each other.
             if vidPlaceBottom[0] == (vidPlaceTop[0] - 1):
                 
@@ -252,9 +251,9 @@ class dbAccess:
 
         print(f"[{datetime.datetime.now()}] addPost()")
 
-
         #Connecting to the database.
         self.conn = self.connector.connect()
+
 
         #Finding the max index.
         maxPostIndex = self.conn.execute(
@@ -269,7 +268,7 @@ class dbAccess:
         stmt = text("INSERT INTO posts VALUES (:index, :vidID, :platform, "+
                     ":postID, :author, :text, :timestamp, :uploadTime)")
         values = {
-            "index": maxPostIndex + 1,
+            "index": (maxPostIndex + 1),
             "vidID": vidID,
             "platform": post.platform,
             "postID": post.id,
@@ -285,6 +284,82 @@ class dbAccess:
         self.conn.close()
 
         return maxPostIndex
+    
+
+    #---------------------------------------------------------------------------
+    def addTelUser(self, newUser):
+
+        """
+        Desc: Adds a new user to the list of telegram users.
+
+        Input:
+            - newUser
+
+        Output:
+            - index (The index of the new user in the DB.)
+        """
+
+        print(f"[{datetime.datetime.now()}] addTelUser()")
+
+        #Connecting to the database.
+        self.conn = self.connector.connect()
+
+
+        #Finding the max index.
+        maxPostIndex = self.conn.execute(
+            sqlalchemy.text(
+                "SELECT MAX(index) FROM telUsers"
+            )
+        ).fetchone()
+
+        maxPostIndex = maxPostIndex[0]
+        
+        #Adding the new post to the "posts" table.
+        stmt = text("INSERT INTO telUsers VALUES (:index, :username)")
+        values = {
+            "index": (maxPostIndex + 1),
+            "username": newUser
+        }
+        self.conn.execute(stmt, values)
+        
+        #Closing the connection.
+        self.conn.commit()
+        self.conn.close()
+
+        return maxPostIndex
+    
+
+    #---------------------------------------------------------------------------
+    def findTelUser(self, username):
+
+        """
+        Desc: Looks for a user in the user list.
+
+        Input:
+            - Username (String)
+
+        Output:
+            - User (Tuple, with index and name)
+            - None
+        """
+    
+        print(f"[{datetime.datetime.now()}] addTelUser()")
+
+        #Connecting to the database.
+        self.conn = self.connector.connect()
+
+
+        #Finding the max index.
+        search = self.conn.execute(
+            sqlalchemy.text(
+                "SELECT * FROM telUsers "+
+                f"WHERE username = '{username}'"
+            )
+        ).fetchone()
+
+        self.conn.close()
+
+        return search
         
 
 if __name__ == "__main__":
@@ -303,4 +378,4 @@ if __name__ == "__main__":
 
     #print(dbAccess().entryCheck(1, "jimbob", 1))
     #print(dbAccess().addPost(post, uuid.UUID("b21faea0-adbe-11ee-abe9-42010a2da002")))
-    print(dbAccess().newVid(post, hashDec, hashHex))
+    #print(dbAccess().temp())

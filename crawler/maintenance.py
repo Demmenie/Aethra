@@ -39,9 +39,9 @@ class maintenance:
         #MilVec collection.
         self.db = self.client.Aethra
         self.video = self.db.video3
-        self.allDocs = list(self.video.find({}).sort("index"))
-        self.count = self.video.count_documents({})
-        self.lists = list(self.db.lists.find({"_id": bson.ObjectId("64adabd75fa42c8c80b3931b")}))
+        #self.allDocs = list(self.video.find({}).sort("index"))
+        #self.count = self.video.count_documents({})
+        self.lists = list(self.db.lists.find({"_id": bson.ObjectId("64adabd75fa42c8c80b3931b")}))[0]
 
         self.dba = dbAccess()
 
@@ -136,7 +136,7 @@ class maintenance:
 
         for doc in self.allDocs:
 
-            print(doc["index"])
+            print("Video Index:", doc["index"])
 
             for post in doc["postList"]:
 
@@ -180,6 +180,10 @@ class maintenance:
                 elif check == None:
                     self.dba.newVid(postCl, postCl.hashDec, postCl.hashHex)
 
+                doc["postList"].remove(post)
+
+            self.allDocs.remove(doc)
+
 
     def vh(self, url):
 
@@ -204,17 +208,19 @@ class maintenance:
     def moveList(self):
 
         print("Getting list from MongoDB.")
+        #print(self.lists)
         telList = self.lists["telegram"]
 
-        for user in telList:
+        for index, user in enumerate(telList):
 
-            if user.split()[0] != "+":
-
-                print(user)
-
-            else:
+            print(user)
+            if list(user)[0] != "+":
                 
-                print(f"not: {user}")
+                result = self.dba.findTelUser(user)
+                print(result)
+
+                if result == None:
+                    self.dba.addTelUser(user)
 
 
 if __name__ == "__main__":
@@ -225,5 +231,5 @@ if __name__ == "__main__":
 
     #print(maintenance().duplicateCheck())
     #print(maintenance().orderCheck)
-    maintenance().refactor()
+    maintenance().moveList()
     #maintenance().vh("https://twitter.com/aldin_aba/status/1570102341189177346")
