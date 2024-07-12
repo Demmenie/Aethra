@@ -1,4 +1,4 @@
-#07/01/24
+#01/07/2024
 #Chico Demmenie
 #Aethra/Crawler/dbAccess
 
@@ -63,9 +63,52 @@ class dbAccess:
         return pool
     
 
-    #A function that checks if the vehicle already exists.
+    #A function that checks if the post already exists.
     #---------------------------------------------------------------------------
-    def entryCheck(self, platform, id, author, hashHex):
+    def postCheck(self, platform, id, author):
+
+        """
+        Desc: Checks any entry against the database to see if the entry already
+        exists.
+        
+        Input:
+            - self
+            - id
+            - author
+
+        Returns:
+            - Result:
+                - None (Means it isn't in the database),
+                - "preexist" (Means that post has already been entered before)
+        """
+
+        print(f"[{datetime.datetime.now()}] postCheck()")
+
+        #Connecting to the database.
+        self.conn = self.connector.connect()
+
+
+        #Looking for the post in the database.
+        post = self.conn.execute(
+            sqlalchemy.text(
+                f"SELECT * FROM posts WHERE platform='{platform}' AND "+
+                f"author='{author}' AND postID='{id}'"
+            )
+        ).fetchone()
+
+        self.conn.close()
+        
+        #If the post is already there then return "preexist"
+        if post != None:
+            return "preexist"
+        
+        else:
+            return None
+
+
+    #A function that checks if the video already exists.
+    #---------------------------------------------------------------------------
+    def vidCheck(self, platform, id, author, hashHex):
 
         """
         Desc: Checks any entry against the database to see if the entry already
@@ -85,7 +128,7 @@ class dbAccess:
                     the post hasn't been entered yet.)
         """
 
-        print(f"[{datetime.datetime.now()}] entryCheck()")
+        print(f"[{datetime.datetime.now()}] vidCheck()")
 
 
         #Connecting to the database.
@@ -343,7 +386,7 @@ class dbAccess:
             - None
         """
     
-        print(f"[{datetime.datetime.now()}] addTelUser()")
+        print(f"[{datetime.datetime.now()}] findTelUser()")
 
         #Connecting to the database.
         self.conn = self.connector.connect()

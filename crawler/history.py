@@ -74,7 +74,7 @@ class history():
                     #Now looking to see if the post has a video in it.
                     lastSlash = post.url.rfind('/')
                     postID = post.url[lastSlash+1:]
-                    url = f"https://t.me/{channel}/{postID}"
+                    url = f"https://t.me/{channel}/{postID}?single"
                     
                     try:
                         hashHex, hashDec = main().videoHash(url)

@@ -14,6 +14,7 @@ import json
 import shutil
 import videohash
 from MongoAccess import mongoServe
+from dbAccess import dbAccess
 
 
 class main:
@@ -30,6 +31,9 @@ class main:
         keys = open("../data/keys.json", "r")
         self.keys = json.load(keys)
         keys.close()
+
+        #Initialising dbAccess
+        self.dba = dbAccess()
 
         #Setting up tweepy api (V1.1)
         #auth = tweepy.OAuth1UserHandler(
@@ -91,7 +95,7 @@ class main:
             try:
                 for index, post in enumerate(posts):
                     
-                    if index > 9:
+                    if index > 10:
                         break
 
                     #First checking for mentioned accounts that we might not have
@@ -102,7 +106,7 @@ class main:
                     try:
                         lastSlash = post.url.rfind('/')
                         postID = post.url[lastSlash+1:]
-                        url = f"https://t.me/{channel}/{postID}"
+                        url = f"https://t.me/{channel}/{postID}?single"
 
                         self.videoHash(url)
 

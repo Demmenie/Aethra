@@ -1,4 +1,4 @@
-#29/10/2022
+#02/07/2024
 #Chico Demmenie
 #Aethra/Scraper/Maintenance.py
 
@@ -8,7 +8,7 @@ import bson
 import copy
 from MongoAccess import mongoServe
 from dbAccess import dbAccess
-import videohash
+import videohash2
 import shutil
 import datetime
 
@@ -40,7 +40,7 @@ class maintenance:
         self.db = self.client.Aethra
         self.video = self.db.video3
         #self.allDocs = list(self.video.find({}).sort("index"))
-        #self.count = self.video.count_documents({})
+        self.count = self.video.count_documents({})
         self.lists = list(self.db.lists.find({"_id": bson.ObjectId("64adabd75fa42c8c80b3931b")}))[0]
 
         self.dba = dbAccess()
@@ -132,57 +132,75 @@ class maintenance:
         """Transfers the database from one collection to another, transforming
             it in some way."""
 
-        print("refactor")
+        print(f"[{datetime.datetime.now()}] refactor()")
+        
 
-        for doc in self.allDocs:
+        #Cycling through each video in the mongo DB
+        for index in range(0, self.count):
+
+            doc = self.video.find_one({"index": index})
 
             print("Video Index:", doc["index"])
-
+            
+            #Then through each post in the video
             for post in doc["postList"]:
 
                 print(post)
 
-                try:
-                    url = f"https://t.me/{post['author']}/{post['id']}"
-
-                    print(url)
-
-                    self.vh(url)
-
-                except videohash.exceptions.DownloadFailed as err:
-                    print(f"Exception occurred:\n {err}"+
-                        "ignoring this post and continuing.")
-                    continue
+                postCheck = self.dba.postCheck(post["platform"], post["id"],
+                    post["author"])
                 
-                except videohash.exceptions.FFmpegFailedToExtractFrames as err:
-                    print(f"[{datetime.datetime.now()}] Caught: {err},",
-                        "continuing.")
-                    continue
+                if postCheck != "preexist":
 
-                class postCl:
-                    hashHex = self.videoHashHex
-                    hashDec = self.videoHashDec
-                    platform = "telegram"
-                    id = str(post["id"])
-                    author = post["author"]
-                    text = post["text"]
-                    timestamp = post["timestamp"]
-                    uTime = post["uploadTime"]
+                    #Looking for the video and rehashing it, both to check that it's
+                    #still there and to make sure the hash is good.
+                    try:
+                        url = f"https://t.me/{post['author']}/{post['id']}?single"
 
-                check = self.dba.entryCheck(postCl.platform, postCl.id,
-                    postCl.author, postCl.hashHex)
-                
-                if check != None and check != "preexist":
-                    print(f"check: {check}")
-                    postCl.index = check[0]
-                    self.dba.addPost(postCl, check[1])
+                        print(url)
 
-                elif check == None:
-                    self.dba.newVid(postCl, postCl.hashDec, postCl.hashHex)
+                        self.vh(url)
 
+                    except videohash2.exceptions.DownloadFailed as err:
+                        print(f"Exception occurred:\n {err}"+
+                            "ignoring this post and continuing.")
+                        continue
+                    
+                    except videohash2.exceptions.FFmpegFailedToExtractFrames as err:
+                        print(f"[{datetime.datetime.now()}] Caught: {err},",
+                            "continuing.")
+                        continue
+                    
+                    #Creating the post class
+                    class postCl:
+                        hashHex = self.videoHashHex
+                        hashDec = self.videoHashDec
+                        platform = "telegram"
+                        id = str(post["id"])
+                        author = post["author"]
+                        text = post["text"]
+                        timestamp = post["timestamp"]
+                        uTime = post["uploadTime"]
+                    
+                    #Checking to see if the post/video already exist.
+                    check = self.dba.vidCheck(postCl.platform, postCl.id,
+                        postCl.author, postCl.hashHex)
+                    
+                    #If the video already exists we add the post to the video.
+                    if check != None and check != "preexist":
+                        print(f"check: {check}")
+                        postCl.index = check[0]
+                        self.dba.addPost(postCl, check[1])
+
+                    #If the video doesn't exist yet, we make a new video entry.
+                    elif check == None:
+                        self.dba.newVid(postCl, postCl.hashDec, postCl.hashHex)
+
+                #Removing the post to save memory
                 doc["postList"].remove(post)
-
-            self.allDocs.remove(doc)
+                
+            #Removeing the video to save memory.
+            #self.allDocs.remove(doc)
 
 
     def vh(self, url):
@@ -190,9 +208,10 @@ class maintenance:
         """Hashes videos from a url"""
 
         #Creating the hash and storing the Hex and Decimal
-        vHash = videohash.VideoHash(url=url, frame_interval=12)
+        vHash = videohash2.VideoHash(url=url, frame_interval=12)
         self.videoHashHex = vHash.hash_hex
         self.videoHashDec = int(self.videoHashHex, 16)
+        self.videoLen = round(vHash.video_duration)
 
         #print(self.videoHashHex, self.videoHashDec)
 
@@ -213,7 +232,7 @@ class maintenance:
 
         for index, user in enumerate(telList):
 
-            print(user)
+            print(index, user)
             if list(user)[0] != "+":
                 
                 result = self.dba.findTelUser(user)
@@ -231,5 +250,5 @@ if __name__ == "__main__":
 
     #print(maintenance().duplicateCheck())
     #print(maintenance().orderCheck)
-    maintenance().moveList()
+    maintenance().refactor()
     #maintenance().vh("https://twitter.com/aldin_aba/status/1570102341189177346")
