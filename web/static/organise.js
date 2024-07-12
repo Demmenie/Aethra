@@ -6,7 +6,7 @@ function organise(postID, author, platform, tagName){
 
   const postDisplay = document.getElementById(
     tagName).getElementsByClassName("display")[0]
-  console.log(postID);
+  //console.log(postID);
 
   // Creating a telegram embed.
   if (platform == "telegram") {
@@ -19,6 +19,7 @@ function organise(postID, author, platform, tagName){
     tg.setAttribute("data-width", "100%");
     tg.setAttribute("data-userpic", "false");
     tg.setAttribute("data-dark", "1");
+    tg.setAttribute("data-single", "");
 
     postDisplay.append(tg);
 
