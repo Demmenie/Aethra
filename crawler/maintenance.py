@@ -159,7 +159,11 @@ class maintenance:
 
                         print(url)
 
-                        self.vh(url)
+                        vidLength = videohash2.video_duration(url=url)
+
+                        if vidLength < 300:
+
+                            self.vh(url)
 
                     except videohash2.exceptions.DownloadFailed as err:
                         print(f"Exception occurred:\n {err}"+
@@ -208,7 +212,12 @@ class maintenance:
         """Hashes videos from a url"""
 
         #Creating the hash and storing the Hex and Decimal
-        vHash = videohash2.VideoHash(url=url, frame_interval=12)
+        vHash = videohash2.VideoHash(
+            url=url,
+            frame_interval=12,
+            download_worst=True
+            )
+        
         self.videoHashHex = vHash.hash_hex
         self.videoHashDec = int(self.videoHashHex, 16)
         self.videoLen = round(vHash.video_duration)
