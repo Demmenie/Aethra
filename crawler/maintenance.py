@@ -227,6 +227,14 @@ class maintenance:
 
         #print(self.videoHashHex, self.videoHashDec)
 
+        videoPath = vHash.storage_path
+        cutPath = videoPath[:videoPath.find("/temp_storage_dir")]
+
+        try:
+            shutil.rmtree(cutPath)
+        except OSError as e:
+            print("Error: %s - %s." % (e.filename, e.strerror))
+
 
     def moveList(self):
 
