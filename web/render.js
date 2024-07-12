@@ -46,18 +46,29 @@ const renderer = (list) => {
             
             //Creating a link to the original post.
             if (platform == "twitter"){
-                page.push(`<a href="https://twitter.com/${author}/
-                    status/${postList[post]["id"]}" target="_blank">`)
+                page.push(`<a 
+                    href="https://twitter.com/${author}/status/${postID}"
+                    target="_blank">`)
 
             } else if (platform == "telegram") {
-                page.push(`<a href="https://t.me/${author}/
-                    ${postList[post]["id"]}" target="_blank">`)
+                //console.log(postID)
+                page.push(`<a href="https://t.me/${author}/${postID}?single"
+                    target="_blank">`)
             }
             page.push('<p id="source" class="meta">Source</p></a>')
 
             //Showing the author.
-            page.push(`<p id="author" class="meta">
-                Author: @${author}</p>`)
+            page.push(`<a href="https://t.me/${author}" target="_blank">
+                <p id="author" class="meta">
+                Author: @${author}</p></a>`)
+
+            //Showing the platform.
+            page.push(`<p id="platform" class="meta">
+                Platform: ${platform}</p>`)
+
+            //Showing the post id.
+            page.push(`<p id="postID" class="meta">
+                Post id: ${postID}</p>`)
 
             //Showing the caption on the post.
             page.push(`<p id="caption" class="meta">Caption: 

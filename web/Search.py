@@ -3,15 +3,17 @@
 #Aethra/web/search.py
 
 #Importing dependencies
-import pymongo
-from pymongo import MongoClient
 from operator import itemgetter
+import datetime
 import videohash
 import shutil
 import json
-import copy
-import math
+import os
 import time
+from google.cloud.sql.connector import Connector, IPTypes
+import pg8000
+import sqlalchemy
+
 
 class DBSearch:
 
@@ -22,26 +24,73 @@ class DBSearch:
         """Class initialisation and database connection."""
 
         #Opening a connection with the MongoDB Atlas Database
-        keys = json.loads(open("data/keys.json",
-            "r").read())
+        keyFile = open("../data/keys.json", "r")
+        self.keys = json.loads(keyFile.read())
+        keyFile.close()
 
-        mongoPass = keys["mongoPass"]
-        mongoCluster = keys["mongoCluster"]
-        mongoAccount = keys["mongoAccount"]
-        conn = ''.join(f"mongodb+srv://{mongoAccount}:{mongoPass}"+
-            f"{mongoCluster}.mongodb.net/{mongoAccount}?retryWrites=true&w="+
-            "majority")
+        print("Connecting with SQL Database.")
+        self.connector = self.connect_with_connector(self.keys)
+
+        #mongoPass = keys["mongoPass"]
+        #mongoCluster = keys["mongoCluster"]
+        #mongoAccount = keys["mongoAccount"]
+        #conn = ''.join(f"mongodb+srv://{mongoAccount}:{mongoPass}"+
+        #    f"{mongoCluster}.mongodb.net/{mongoAccount}?retryWrites=true&w="+
+        #    "majority")
 
         #Setting a 5-second connection timeout so that we're not pinging the
         #server endlessly
-        self.client = pymongo.MongoClient(conn,
-            tls=True,
-            serverSelectionTimeoutMS=5000)
+        #self.client = pymongo.MongoClient(conn,
+        #    tls=True,
+        #    serverSelectionTimeoutMS=5000)
 
         #Setting the class wide variables that connect to the database and the
         #video collection.
-        self.db = self.client.Aethra
-        self.video = self.db.video3
+        #self.db = self.client.Aethra
+        #self.video = self.db.video3
+
+
+    #---------------------------------------------------------------------------
+    def connect_with_connector(self, keys) -> sqlalchemy.engine.base.Engine:
+        """
+        Initializes a connection pool for a Cloud SQL instance of Postgres
+        using the Cloud SQL Python Connector package.
+
+        Input:
+            - keys
+
+        Output:
+            - pool
+        """
+        # Note: Saving credentials in environment variables is convenient, but not
+        # secure - consider a more secure solution such as
+        # Cloud Secret Manager (https://cloud.google.com/secret-manager) to help
+        # keep secrets safe.
+
+        ip_type = IPTypes.PRIVATE if os.environ.get(self.keys["gPrivIP"]) else IPTypes.PUBLIC
+
+        # initialize Cloud SQL Python Connector object
+        connector = Connector()
+
+        def getconn() -> pg8000.dbapi.Connection:
+            conn: pg8000.dbapi.Connection = connector.connect(
+                self.keys["gProj"],
+                "pg8000",
+                user=self.keys["gUser"],
+                password=self.keys["gPass"],
+                db=self.keys["gDB"],
+                ip_type=ip_type,
+            )
+            return conn
+
+        # The Cloud SQL Python Connector can be used with SQLAlchemy
+        # using the 'creator' argument to 'create_engine'
+        pool = sqlalchemy.create_engine(
+            "postgresql+pg8000://",
+            creator=getconn,
+            # ...
+        )
+        return pool
 
 
     #---------------------------------------------------------------------------
@@ -75,9 +124,15 @@ class DBSearch:
 
 
     #---------------------------------------------------------------------------
-    def standard(self, url, allDocs):
+    def standard(self, url):
 
         """Searches the database in the standard way using binary search."""
+
+        print(f"[{datetime.datetime.now()}] DBSearch.standard()")
+
+        #Connecting to the database.
+        self.conn = self.connector.connect()
+
 
         start = time.time()
         #Hashing the video
@@ -92,77 +147,59 @@ class DBSearch:
         print(f"Hashing in {time.time() - start}")
         start = time.time()
 
-        #Finding the length of the list so far
-        length = len(allDocs)
+        vidList = self.conn.execute(
+            sqlalchemy.text(
+                "SELECT * FROM "+
+                    "((SELECT * FROM videos "+
+                    f"WHERE hashDec >= {self.hashDec} "+
+                    "ORDER BY hashDec ASC LIMIT 5) "+ 
+                    "UNION ALL "+
+                    "(SELECT * FROM videos "+
+                    f"WHERE hashDec < {self.hashDec} "+
+                    "ORDER BY hashDec DESC LIMIT 5)) "+
+                "AS nearest "+
+                f"ORDER BY abs({self.hashDec} - hashDec) LIMIT 10;"
+            )
+        )
 
-        #Setting up variables for the binary search.
-        result = None
-        halfLength = length / 2
-        modifyLength = copy.copy(halfLength)
-        searching = True
-        while searching:
+        #Adding the videos as JSON objects with the associated posts
+        if vidList != None:
 
-            modifyLength = modifyLength / 2
-            halfFloor = math.floor(halfLength)
-            halfCeil = math.ceil(halfLength)
-
-            floorDoc = allDocs[halfFloor]
-            ceilDoc = allDocs[halfCeil]
-
-            #If one of the selected documents is the correct one, then we don't
-            #Need top continue.
-            if floorDoc["hashHex"] == self.hashHex:
-
-                result = copy.copy(floorDoc)
-                searching = False
-
-            elif ceilDoc["hashHex"] == self.hashHex:
-
-                result = copy.copy(ceilDoc)
-                searching = False
-
-            #If the result doesn't exist, we just return the closest document.
-            elif (int(floorDoc["hashDec"]) < self.hashDec and
-                int(ceilDoc["hashDec"]) > self.hashDec):
-
-                result = copy.copy(floorDoc)
-                searching = False
-
-            #If either of the docs are None then we've reached the top
-            #or bottom.
-            elif floorDoc["index"] == 0 and int(floorDoc["hashDec"]) > self.hashDec:
-
-                result = None
-                searching = False
-
-            elif ceilDoc["index"] == (length - 1) and (int(ceilDoc["hashDec"]) <
-                self.hashDec):
-
-                result = None
-                searching = False
-
-            #If we haven't found it yet, we keep dividing the list.
-            elif int(ceilDoc["hashDec"]) < self.hashDec:
-                halfLength = halfLength + modifyLength
-
-            elif int(floorDoc["hashDec"]) > self.hashDec:
-                halfLength = halfLength - modifyLength
-
-        print(f"Search in {time.time() - start}")
-        start = time.time()
-
-        #A list of 10 videos which are similar is shown to the user.
-        if result != None:
             returnList = []
-            returnList.append(result)
+            for vid in vidList:
 
-            for i in range(1, 6):
-                try:
-                    returnList.append(allDocs[result["index"] + i])
-                    returnList.append(allDocs[result["index"] - i])
+                vidID = vid[1]
+                vidOb = {
+                    "index": vid[0],
+                    "hashHex": vid[3],
+                    "hashDec": int(vid[2]),
+                    "postList": []
+                }
 
-                except IndexError:
-                    continue
+                postList = self.conn.execute(
+                    sqlalchemy.text(
+                        "SELECT * FROM posts "+
+                        f"WHERE vidID = '{vidID}';"
+                    )
+                )
+
+                for post in postList:
+                    postOb = {
+                        "platform": post[2],
+                        "id": post[3],
+                        "author": post[4],
+                        "text": post[5],
+                        "timestamp": post[6],
+                        "uploadTime": post[7]
+                    }
+
+                    vidOb["postList"].append(postOb)
+
+                returnList.append(vidOb)
+
+
+            print(f"Search in {time.time() - start}")
+            start = time.time()
 
 
             for video in returnList:
@@ -171,10 +208,39 @@ class DBSearch:
             returnList = sorted(returnList, key=itemgetter('sDiff')) 
             print(f"Sorting in {time.time() - start}")
 
+            self.conn.close()
+
             return json.dumps(returnList)
 
         else:
-            return result
+            self.conn.close()
+            return vidList
+
+
+    #---------------------------------------------------------------------------
+    def entryCount(self):
+
+        """Hashes videos for storage."""
+
+        print(f"[{datetime.datetime.now()}] DBSearch.entryCount()")
+
+        #Connecting to the database.
+        self.conn = self.connector.connect()
+
+        vidCount = self.conn.execute(
+            sqlalchemy.text(
+                "SELECT COUNT(index) FROM videos"
+            )
+        ).fetchone()
+
+        postCount = self.conn.execute(
+            sqlalchemy.text(
+                "SELECT COUNT(index) FROM posts"
+            )
+        ).fetchone()
+
+        self.conn.close()
+        return vidCount[0], postCount[0]
 
     
     #---------------------------------------------------------------------------
@@ -194,16 +260,6 @@ class DBSearch:
         shutil.rmtree(cutPath)
 
 
-    #---------------------------------------------------------------------------
-    def updateList(self):
-
-        """Updates the list of videos."""
-
-        response = list(self.video.find({}, 
-            projection={'_id': False}).sort("index"))
-        return response
-
-
 if __name__ == "__main__":
 
-    print(DBSearch().cleaning("Hello"))
+    print(DBSearch().entryCount())

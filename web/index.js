@@ -31,10 +31,6 @@ const year = new Date().getFullYear()
 //------------------------------------------------------------------------------
 // Initialise server variables
 const init = () => {
-    //Starting the getList function.
-    this.lastUpdate = 0;
-    this.uList = [];
-    getList.bind(this)();
 
     // initialise express app
     this.app = express();
@@ -84,8 +80,7 @@ const server = () => {
             if (this.clean == true) {
                 async function sSearch() {
                     return await python`search.DBSearch().standard(
-                        ${req.query.q}, 
-                        ${this.uList}
+                        ${req.query.q}
                     )`;
                 }
                 sSearch.bind(this)().then(function(sResponse) {
@@ -118,9 +113,15 @@ const server = () => {
     // =================================
     // Returns the about page.
     this.app.get('/about', (req, res) => {
-        res.render('about', {listCount: this.uListCount, year: year, 
-            version: version});
-    })
+        const counts = new Promise(async (resolve) => {
+            resolve(await python`search.DBSearch().entryCount()`);
+        });
+
+        counts.then(function(counts){
+            res.render('about', {vidCount: counts[0], postCount: counts[1],
+                year: year, version: version});
+            });
+    });
 
     // =================================
     // Sends a specific page when the search term isn't clean.
@@ -230,6 +231,7 @@ const server = () => {
 
 
 // -----------------------------------------------------------------------------
+/*
 const getList = () => {
     // Retrieves the list of videos from the database every 15 mins
     console.log("Starting getList() loop.");
@@ -261,5 +263,6 @@ const getList = () => {
     }
     loop.bind(this)()
 }
+*/
 
 init();
