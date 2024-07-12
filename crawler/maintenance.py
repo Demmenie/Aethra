@@ -165,6 +165,9 @@ class maintenance:
 
                             self.vh(url)
 
+                        else:
+                            continue
+
                     except videohash2.exceptions.DownloadFailed as err:
                         print(f"Exception occurred:\n {err}"+
                             "ignoring this post and continuing.")
