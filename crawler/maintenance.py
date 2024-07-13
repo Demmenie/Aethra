@@ -1,4 +1,4 @@
-#02/07/2024
+#13/07/2024
 #Chico Demmenie
 #Aethra/Scraper/Maintenance.py
 
@@ -231,7 +231,7 @@ class maintenance:
         cutPath = list(videoPath)[:videoPath.find("/temp_storage_dir")]
 
         try:
-            shutil.rmtree(cutPath.join(""))
+            shutil.rmtree("".join(cutPath))
         except OSError as e:
             print("Error: %s - %s." % (e.filename, e.strerror))
             print(cutPath)
