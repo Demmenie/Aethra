@@ -66,7 +66,6 @@ class main:
                 #Searching the database to see if this video already
                 #exists.
                 result = self.dba.vidCheck(postOb.platform,
-                                           postOb.id,
                                            postOb.author,
                                            postOb.id,
                                            postOb.hashHex)
