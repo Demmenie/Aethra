@@ -108,7 +108,7 @@ class dbAccess:
 
     #A function that checks if the video already exists.
     #---------------------------------------------------------------------------
-    def vidCheck(self, platform, id, author, hashHex):
+    def vidCheck(self, platform, author, id, hashHex):
 
         """
         Desc: Checks any entry against the database to see if the entry already
