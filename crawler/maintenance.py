@@ -202,7 +202,7 @@ class maintenance:
 
                     #If the video doesn't exist yet, we make a new video entry.
                     elif check == None:
-                        self.dba.newVid(postCl, postCl.hashDec, postCl.hashHex)
+                        self.dba.newVid(postCl)
 
                 #Removing the post to save memory
                 doc["postList"].remove(post)

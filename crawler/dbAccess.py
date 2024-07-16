@@ -165,7 +165,7 @@ class dbAccess:
     
 
     #---------------------------------------------------------------------------
-    def newVid(self, post, hashDec, hashHex):
+    def newVid(self, post):
 
         """
         Desc: Checks if the video already exists and creates a new video entry.
@@ -194,7 +194,7 @@ class dbAccess:
         vidCheck = self.conn.execute(
             sqlalchemy.text(
                 "SELECT * FROM videos "+
-                f"WHERE hashHex = '{hashHex}'"
+                f"WHERE hashHex = '{post.hashHex}'"
             )
         ).fetchone()
 
@@ -211,7 +211,7 @@ class dbAccess:
                     "WHERE hashDec = "+ 
                         "(SELECT MAX(hashDec) "+
                         "FROM videos AS B "+
-                        f"WHERE hashDec < {hashDec});"
+                        f"WHERE hashDec < {post.hashDec});"
                 )
             ).fetchone()
 
@@ -223,7 +223,7 @@ class dbAccess:
                     "WHERE hashDec = "+ 
                         "(SELECT MIN(hashDec) "+
                         "FROM videos AS B "+
-                        f"WHERE hashDec > {hashDec});"
+                        f"WHERE hashDec > {post.hashDec});"
                 )
             ).fetchone()
 
@@ -258,8 +258,8 @@ class dbAccess:
                 values = {
                     "index": vidPlaceTop[0],
                     "id": vidID,
-                    "hashDec": hashDec,
-                    "hashHex": hashHex
+                    "hashDec": post.hashDec,
+                    "hashHex": post.hashHex
                 }
                 self.conn.execute(stmt, values)
                 self.conn.commit()
