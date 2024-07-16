@@ -191,8 +191,8 @@ class maintenance:
                         uTime = post["uploadTime"]
                     
                     #Checking to see if the post/video already exist.
-                    check = self.dba.vidCheck(postCl.platform, postCl.id,
-                        postCl.author, postCl.hashHex)
+                    check = self.dba.vidCheck(postCl.platform, postCl.author,
+                        postCl.id, postCl.hashHex)
                     
                     #If the video already exists we add the post to the video.
                     if check != None and check != "preexist":
