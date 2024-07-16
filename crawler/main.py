@@ -65,18 +65,18 @@ class main:
                 
                 #Searching the database to see if this video already
                 #exists.
-                result = self.dba.vidCheck(post.id, post.author)
+                result = self.dba.vidCheck(postOb.id, postOb.author)
 
                 #Adding the new tweet to an existing entry
                 if result != None and result != "preexist":
 
-                    post.index = result[0]
-                    self.dba.addPost(post, result[1])
+                    postOb.index = result[0]
+                    self.dba.addPost(postOb, result[1])
 
                 #Creating a new entry for a new tweet.
                 elif result == None:
 
-                    self.dba.newVid(post)
+                    self.dba.newVid(postOb)
 
 
 if __name__ == "__main__":
