@@ -304,13 +304,13 @@ class dbAccess:
             )
         ).fetchone()
 
-        maxPostIndex = maxPostIndex[0]
+        postIndex = maxPostIndex[0] + 1
         
         #Adding the new post to the "posts" table.
         stmt = text("INSERT INTO posts VALUES (:index, :vidID, :platform, "+
                     ":postID, :author, :text, :timestamp, :uploadTime)")
         values = {
-            "index": (maxPostIndex + 1),
+            "index": postIndex,
             "vidID": vidID,
             "platform": post.platform,
             "postID": post.id,
@@ -489,6 +489,9 @@ class dbAccess:
 
         self.conn.close()
 
+        if not maxIndex:
+            maxIndex = 0
+            
         return maxIndex
     
 
@@ -511,7 +514,7 @@ class dbAccess:
 
         #Adding the new post to the "posts" table.
         stmt = text("INSERT INTO queue VALUES (:index, :platform, :postid, "+
-                    ":author, :text, :timestamp, :uploadtime);")
+                    ":author, :text, :timestamp, :uploadtime, :vidlength);")
         values = {
             "index": index,
             "platform": post.platform,
