@@ -6,8 +6,8 @@ import pymongo
 import json
 import bson
 import copy
-from MongoAccess import mongoServe
 from dbAccess import dbAccess
+from utils import utils
 import videohash2
 import shutil
 import datetime
@@ -44,6 +44,7 @@ class maintenance:
         self.lists = list(self.db.lists.find({"_id": bson.ObjectId("64adabd75fa42c8c80b3931b")}))[0]
 
         self.dba = dbAccess()
+        self.utils = utils()
 
 
     def orderCheck(self):
@@ -147,8 +148,8 @@ class maintenance:
 
                 print(post)
 
-                postCheck = self.dba.postCheck(post["platform"], post["id"],
-                    post["author"])
+                postCheck = self.dba.postCheck(post["platform"], post["author"],
+                    post["id"])
                 
                 if postCheck != "preexist":
 
@@ -163,7 +164,7 @@ class maintenance:
 
                         if vidLength < 300:
 
-                            self.vh(url)
+                            self.utils.videoHash(url)
 
                         else:
                             continue
@@ -208,33 +209,6 @@ class maintenance:
                 
             #Removeing the video to save memory.
             #self.allDocs.remove(doc)
-
-
-    def vh(self, url):
-
-        """Hashes videos from a url"""
-
-        #Creating the hash and storing the Hex and Decimal
-        vHash = videohash2.VideoHash(
-            url=url,
-            frame_interval=12,
-            download_worst=True
-            )
-        
-        self.videoHashHex = vHash.hash_hex
-        self.videoHashDec = int(self.videoHashHex, 16)
-        self.videoLen = round(vHash.video_duration)
-
-        #print(self.videoHashHex, self.videoHashDec)
-
-        videoPath = vHash.storage_path
-        cutPath = list(videoPath)[:videoPath.find("/temp_storage_dir")]
-
-        try:
-            shutil.rmtree("".join(cutPath))
-        except OSError as e:
-            print("Error: %s - %s." % (e.filename, e.strerror))
-            print(cutPath)
 
 
     def moveList(self):
