@@ -164,7 +164,7 @@ class maintenance:
 
                         if vidLength < 300:
 
-                            self.utils.videoHash(url)
+                            vidHashHex, vidHashDec = self.utils.videoHash(url)
 
                         else:
                             continue
@@ -181,8 +181,8 @@ class maintenance:
                     
                     #Creating the post class
                     class postCl:
-                        hashHex = self.videoHashHex
-                        hashDec = self.videoHashDec
+                        hashHex = vidHashHex
+                        hashDec = vidHashDec
                         platform = "telegram"
                         id = str(post["id"])
                         author = post["author"]
