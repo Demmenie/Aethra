@@ -66,11 +66,12 @@ class telegram:
 
         chosenIndex = random.randint(0, self.maxUsers)
         channel = self.dba.getTelUser(chosenIndex)
+        user = channel[1]
 
         try:
             print(f"[{datetime.datetime.now()}] Getting historical posts", 
                     f"from {channel}")
-            posts = tg.TelegramChannelScraper(channel).get_items()
+            posts = tg.TelegramChannelScraper(user).get_items()
 
         except snscrape.base.ScraperException as err:
             print(f"[{datetime.datetime.now()}] Caught: {err}",
@@ -78,7 +79,7 @@ class telegram:
 
         for post in posts:
             
-            self.utils.resolve(channel, post)
+            self.utils.resolve(user, post)
 
 
 if __name__ == "__main__":
