@@ -86,6 +86,11 @@ class telegram:
 if __name__ == "__main__":
     telegram = telegram()
 
-    while True:
-        telegram.main()
-        telegram.history()
+    if input("Main or History? ") in ["m", "M"]:
+
+        while True:
+            telegram.main()
+    
+    else:
+        while True:
+            telegram.history()
