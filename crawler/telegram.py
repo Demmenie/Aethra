@@ -76,9 +76,9 @@ class telegram:
             print(f"[{datetime.datetime.now()}] Caught: {err}",
                     "continuing.")
 
-            for post in posts:
-                
-                self.utils.resolve(channel, post)
+        for post in posts:
+            
+            self.utils.resolve(channel, post)
 
 
 if __name__ == "__main__":
