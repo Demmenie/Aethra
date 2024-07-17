@@ -4,8 +4,6 @@
 
 import snscrape
 from snscrape.modules import telegram as tg
-import videohash2
-import time
 import datetime
 import random
 from dbAccess import dbAccess
@@ -72,7 +70,7 @@ class telegram:
         try:
             print(f"[{datetime.datetime.now()}] Getting historical posts", 
                     f"from {channel}")
-            posts = telegram.TelegramChannelScraper(channel).get_items()
+            posts = tg.TelegramChannelScraper(channel).get_items()
 
         except snscrape.base.ScraperException as err:
             print(f"[{datetime.datetime.now()}] Caught: {err}",
