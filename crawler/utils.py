@@ -99,6 +99,11 @@ class utils:
             print(f"[{datetime.datetime.now()}] Caught: {err}",
                 "continuing.")
             return err
+        
+        except UnboundLocalError as err:
+            print(f"[{datetime.datetime.now()}] Caught: {err}",
+                "continuing.")
+            return err
 
         if vidLength > 300:
             return "tooLong"
