@@ -62,6 +62,11 @@ class main:
                         "continuing.")
                     continue
 
+                except UnboundLocalError as err:
+                    print(f"[{datetime.datetime.now()}] Caught: {err}",
+                        "continuing.")
+                    return err
+
                 
                 #Searching the database to see if this video already
                 #exists.
@@ -73,7 +78,6 @@ class main:
                 #Adding the new tweet to an existing entry
                 if result != None and result != "preexist":
 
-                    postOb.index = result[0]
                     self.dba.addPost(postOb, result[1])
 
                 #Creating a new entry for a new tweet.
