@@ -163,8 +163,12 @@ class maintenance:
                         vidLength = videohash2.video_duration(url=url)
 
                         if vidLength < 300:
+                            
+                            try:
+                                vidHashHex, vidHashDec = self.utils.videoHash(url)
 
-                            vidHashHex, vidHashDec = self.utils.videoHash(url)
+                            except UnboundLocalError as err:
+                                continue
 
                         else:
                             continue
