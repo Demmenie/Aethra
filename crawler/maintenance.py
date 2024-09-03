@@ -137,7 +137,7 @@ class maintenance:
         
 
         #Cycling through each video in the mongo DB
-        for index in range(0, self.count):
+        for index in range(16816, self.count):
 
             doc = self.video.find_one({"index": index})
 
