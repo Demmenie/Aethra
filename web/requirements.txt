@@ -1,5 +1,3 @@
-pg8000
-sqlalchemy
-cloud-sql-python-connector
-videohash2
-Pillow
+pymongo==4.6.3
+videohash==3.0.1
+Pillow==9.5.0
