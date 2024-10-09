@@ -1,12 +1,14 @@
-#29/10/2022
+#13/07/2024
 #Chico Demmenie
 #Aethra/Scraper/Maintenance.py
 
 import pymongo
 import json
+import bson
 import copy
-from MongoAccess import mongoServe
-import videohash
+from dbAccess import dbAccess
+from utils import utils
+import videohash2
 import shutil
 import datetime
 
@@ -36,11 +38,13 @@ class maintenance:
         #Setting the class wide variables that connect to the database and the
         #MilVec collection.
         self.db = self.client.Aethra
-        self.video = self.db.video
-        self.allDocs = list(self.video.find({}).sort("index"))
+        self.video = self.db.video3
+        #self.allDocs = list(self.video.find({}).sort("index"))
         self.count = self.video.count_documents({})
+        self.lists = list(self.db.lists.find({"_id": bson.ObjectId("64adabd75fa42c8c80b3931b")}))[0]
 
-        #self.ms = mongoServe()
+        self.dba = dbAccess()
+        self.utils = utils()
 
 
     def orderCheck(self):
@@ -129,67 +133,104 @@ class maintenance:
         """Transfers the database from one collection to another, transforming
             it in some way."""
 
+        print(f"[{datetime.datetime.now()}] refactor()")
         
 
-        for doc in self.allDocs[3154:]:
+        #Cycling through each video in the mongo DB
+        for index in range(16816, self.count):
 
+            doc = self.video.find_one({"index": index})
+
+            print("Video Index:", doc["index"])
+            
+            #Then through each post in the video
             for post in doc["postList"]:
 
-                try:
-                    self.vh((f"https://twitter.com/{post['author']}/status/"+
-                        post["id"]))
+                print(post)
 
-                except videohash.exceptions.DownloadFailed as err:
-                    print(f"Exception occurred:\n {err}"+
-                        "ignoring this post and continuing.")
-                    continue
+                postCheck = self.dba.postCheck(post["platform"], post["author"],
+                    post["id"])
                 
-                except videohash.exceptions.FFmpegFailedToExtractFrames as err:
-                    print(f"[{datetime.datetime.now()}] Caught: {err},",
-                        "continuing.")
-                    continue
+                if postCheck != "preexist":
 
+                    #Looking for the video and rehashing it, both to check that it's
+                    #still there and to make sure the hash is good.
+                    try:
+                        url = f"https://t.me/{post['author']}/{post['id']}?single"
 
-                class postCl:
-                    hashHex = self.videoHashHex
-                    hashDec = self.videoHashDec
-                    platform = "twitter"
-                    id = str(post["id"])
-                    author = post["author"]
-                    text = post["text"]
-                    timestamp = post["timestamp"]
-                    uTime = post["uploadTime"]
+                        print(url)
 
-                check = mongoServe().entryCheck(postCl.id, postCl.hashHex,
-                    postCl.hashDec)
+                        vidLength = videohash2.video_duration(url=url)
+
+                        if vidLength < 300:
+                            
+                            try:
+                                vidHashHex, vidHashDec = self.utils.videoHash(url)
+
+                            except UnboundLocalError as err:
+                                continue
+
+                        else:
+                            continue
+
+                    except videohash2.exceptions.DownloadFailed as err:
+                        print(f"Exception occurred:\n {err}"+
+                            "ignoring this post and continuing.")
+                        continue
+                    
+                    except videohash2.exceptions.FFmpegFailedToExtractFrames as err:
+                        print(f"[{datetime.datetime.now()}] Caught: {err},",
+                            "continuing.")
+                        continue
+                    
+                    #Creating the post class
+                    class postCl:
+                        hashHex = vidHashHex
+                        hashDec = vidHashDec
+                        platform = "telegram"
+                        id = str(post["id"])
+                        author = post["author"]
+                        text = post["text"]
+                        timestamp = post["timestamp"]
+                        uTime = post["uploadTime"]
+                    
+                    #Checking to see if the post/video already exist.
+                    check = self.dba.vidCheck(postCl.platform, postCl.author,
+                        postCl.id, postCl.hashHex)
+                    
+                    #If the video already exists we add the post to the video.
+                    if check != None and check != "preexist":
+                        print(f"check: {check}")
+                        postCl.index = check[0]
+                        self.dba.addPost(postCl, check[1])
+
+                    #If the video doesn't exist yet, we make a new video entry.
+                    elif check == None:
+                        self.dba.newVid(postCl)
+
+                #Removing the post to save memory
+                doc["postList"].remove(post)
                 
-                if check != None and check != "preexist":
-                    print(f"check: {check}")
-                    postCl.index = check["index"]
-                    mongoServe().addToEntry(postCl)
-
-                elif check == None:
-                    mongoServe().newEntry(postCl)
+            #Removeing the video to save memory.
+            #self.allDocs.remove(doc)
 
 
-    def vh(self, url):
+    def moveList(self):
 
-        """Hashes videos from a url"""
+        print("Getting list from MongoDB.")
+        #print(self.lists)
+        telList = self.lists["telegram"]
 
-        #Creating the hash and storing the Hex and Decimal
-        vHash = videohash.VideoHash(url=url, frame_interval=12)
-        self.videoHashHex = vHash.hash_hex
-        self.videoHashDec = int(self.videoHashHex, 16)
+        for index, user in enumerate(telList):
 
-        #print(self.videoHashHex, self.videoHashDec)
+            print(index, user)
+            if list(user)[0] != "+":
+                
+                result = self.dba.findTelUser(user)
+                print(result)
 
-        videoPath = vHash.storage_path
-        cutPath = videoPath[:videoPath.find("temp_storage_dir")]
-
-        try:
-            shutil.rmtree(cutPath)
-        except OSError as e:
-            print("Error: %s - %s." % (e.filename, e.strerror))
+                if result == None:
+                    self.dba.addTelUser(user)
 
 
 if __name__ == "__main__":
@@ -198,6 +239,7 @@ if __name__ == "__main__":
             #maintenance().reOrder()
             #print(maintenance().orderCheck())
 
-    print(maintenance().duplicateCheck())
+    #print(maintenance().duplicateCheck())
+    #print(maintenance().orderCheck)
     maintenance().refactor()
     #maintenance().vh("https://twitter.com/aldin_aba/status/1570102341189177346")
