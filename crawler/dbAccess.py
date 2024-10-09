@@ -1,4 +1,4 @@
-#01/07/2024
+#16/07/2024
 #Chico Demmenie
 #Aethra/Crawler/dbAccess
 
@@ -32,8 +32,8 @@ class dbAccess:
 
         Uses the Cloud SQL Python Connector package.
         """
-        # Note: Saving credentials in environment variables is convenient, but not
-        # secure - consider a more secure solution such as
+        # Note: Saving credentials in environment variables is convenient, but
+        # not secure - consider a more secure solution such as
         # Cloud Secret Manager (https://cloud.google.com/secret-manager) to help
         # keep secrets safe.
 
@@ -65,7 +65,7 @@ class dbAccess:
 
     #A function that checks if the post already exists.
     #---------------------------------------------------------------------------
-    def postCheck(self, platform, id, author):
+    def postCheck(self, platform, author, id):
 
         """
         Desc: Checks any entry against the database to see if the entry already
@@ -108,7 +108,7 @@ class dbAccess:
 
     #A function that checks if the video already exists.
     #---------------------------------------------------------------------------
-    def vidCheck(self, platform, id, author, hashHex):
+    def vidCheck(self, platform, author, id, hashHex):
 
         """
         Desc: Checks any entry against the database to see if the entry already
@@ -165,7 +165,7 @@ class dbAccess:
     
 
     #---------------------------------------------------------------------------
-    def newVid(self, post, hashDec, hashHex):
+    def newVid(self, post):
 
         """
         Desc: Checks if the video already exists and creates a new video entry.
@@ -194,7 +194,7 @@ class dbAccess:
         vidCheck = self.conn.execute(
             sqlalchemy.text(
                 "SELECT * FROM videos "+
-                f"WHERE hashHex = '{hashHex}'"
+                f"WHERE hashHex = '{post.hashHex}'"
             )
         ).fetchone()
 
@@ -211,7 +211,7 @@ class dbAccess:
                     "WHERE hashDec = "+ 
                         "(SELECT MAX(hashDec) "+
                         "FROM videos AS B "+
-                        f"WHERE hashDec < {hashDec});"
+                        f"WHERE hashDec < {post.hashDec});"
                 )
             ).fetchone()
 
@@ -223,7 +223,7 @@ class dbAccess:
                     "WHERE hashDec = "+ 
                         "(SELECT MIN(hashDec) "+
                         "FROM videos AS B "+
-                        f"WHERE hashDec > {hashDec});"
+                        f"WHERE hashDec > {post.hashDec});"
                 )
             ).fetchone()
 
@@ -248,7 +248,6 @@ class dbAccess:
                         f"WHERE index >= {vidPlaceTop[0]}"
                     )
                 )
-                self.conn.commit()
 
                 #Adding the new video to the "videos" table.
                 vidID = uuid.uuid4()
@@ -259,8 +258,8 @@ class dbAccess:
                 values = {
                     "index": vidPlaceTop[0],
                     "id": vidID,
-                    "hashDec": hashDec,
-                    "hashHex": hashHex
+                    "hashDec": post.hashDec,
+                    "hashHex": post.hashHex
                 }
                 self.conn.execute(stmt, values)
                 self.conn.commit()
@@ -305,13 +304,13 @@ class dbAccess:
             )
         ).fetchone()
 
-        maxPostIndex = maxPostIndex[0]
+        postIndex = maxPostIndex[0] + 1
         
         #Adding the new post to the "posts" table.
         stmt = text("INSERT INTO posts VALUES (:index, :vidID, :platform, "+
                     ":postID, :author, :text, :timestamp, :uploadTime)")
         values = {
-            "index": (maxPostIndex + 1),
+            "index": postIndex,
             "vidID": vidID,
             "platform": post.platform,
             "postID": post.id,
@@ -404,21 +403,204 @@ class dbAccess:
 
         return search
         
-
-if __name__ == "__main__":
-
-    post = {
-        "platform": "telegram",
-        "id": "1",
-        "author": "jimbob",
-        "text": "hello",
-        "timestamp": time.time(),
-        "uploadTime": time.time()
-        }
     
-    hashDec = 2
-    hashHex = "2"
+    #---------------------------------------------------------------------------
+    def getTelUser(self, index):
 
-    #print(dbAccess().entryCheck(1, "jimbob", 1))
-    #print(dbAccess().addPost(post, uuid.UUID("b21faea0-adbe-11ee-abe9-42010a2da002")))
-    #print(dbAccess().temp())
+        """
+        Desc: Looks for a user in the user list.
+
+        Input:
+            - Index (Integer)
+
+        Output:
+            - User (Tuple, with index and name)
+            - None
+        """
+    
+        print(f"[{datetime.datetime.now()}] getTelUser()")
+
+        #Connecting to the database.
+        self.conn = self.connector.connect()
+
+
+        #Finding the max index.
+        user = self.conn.execute(
+            sqlalchemy.text(
+                "SELECT * FROM telUsers "+
+                f"WHERE index = '{index}'"
+            )
+        ).fetchone()
+
+        self.conn.close()
+
+        return user
+    
+
+    #---------------------------------------------------------------------------
+    def getMaxTelUsers(self):
+
+        """
+        Desc: Finds the number of users in the user list
+
+        Output:
+            - maxIndex (Integer)
+        """
+    
+        print(f"[{datetime.datetime.now()}] getMaxTelUsers()")
+
+        #Connecting to the database.
+        self.conn = self.connector.connect()
+
+
+        #Finding the max index.
+        maxIndex = self.conn.execute(
+            sqlalchemy.text(
+                "SELECT MAX(index) FROM telUsers "
+            )
+        ).fetchone()[0]
+
+        self.conn.close()
+
+        return maxIndex
+    
+
+    #---------------------------------------------------------------------------
+    def getMaxQ(self):
+
+        """
+        Desc: Finds the highest Queue index
+
+        Output:
+            - maxIndex (Integer)
+        """
+    
+        print(f"[{datetime.datetime.now()}] getMaxQ()")
+
+        #Connecting to the database.
+        self.conn = self.connector.connect()
+
+        #Finding the max index.
+        maxIndex = self.conn.execute(
+            sqlalchemy.text(
+                "SELECT MAX(index) FROM queue;"
+            )
+        ).fetchone()[0]
+
+        self.conn.close()
+
+        if not maxIndex:
+            maxIndex = 0
+            
+        return maxIndex
+    
+
+    #---------------------------------------------------------------------------
+    def addQPost(self, post):
+
+        """
+        Desc: Finds the number of users in the user list
+
+        Output:
+            - maxIndex (Integer)
+        """
+    
+        print(f"[{datetime.datetime.now()}] addQPost()")
+
+        index = self.getMaxQ() + 1
+
+        #Connecting to the database.
+        self.conn = self.connector.connect()
+
+        #Adding the new post to the "posts" table.
+        stmt = text("INSERT INTO queue VALUES (:index, :platform, :postid, "+
+                    ":author, :text, :timestamp, :uploadtime, :vidlength);")
+        values = {
+            "index": index,
+            "platform": post.platform,
+            "postid": post.id,
+            "author": post.author,
+            "text": post.text,
+            "timestamp": post.timestamp,
+            "uploadtime": post.uTime,
+            "vidlength": post.vidLength
+        }
+        self.conn.execute(stmt, values)
+        self.conn.commit()
+
+        self.conn.close()
+
+
+    #---------------------------------------------------------------------------
+    def findQPost(self, platform, author, postID):
+
+        """
+        Desc: Finds a post in the queue
+
+        Output:
+            - post
+            - None
+        """
+    
+        print(f"[{datetime.datetime.now()}]  findQPost()")
+
+        #Connecting to the database.
+        self.conn = self.connector.connect()
+
+        #Finding the max index.
+        post = self.conn.execute(
+            sqlalchemy.text(
+                "SELECT * FROM queue WHERE "+
+                f"platform = '{platform}' AND author = '{author}' AND "+
+                f"postid = '{postID}';"
+            )
+        ).fetchone()
+
+        self.conn.close()
+
+        return post
+
+
+    #---------------------------------------------------------------------------
+    def popQPost(self):
+
+        """
+        Desc: Pops the lowest post from the queue. 
+
+        Output:
+            - post (tuple)
+        """
+    
+        print(f"[{datetime.datetime.now()}] popQPost()")
+
+        #Connecting to the database.
+        self.conn = self.connector.connect()
+
+        #taking the first post
+        post = self.conn.execute(
+            sqlalchemy.text(
+                "SELECT * FROM queue WHERE index = 0"
+            )
+        ).fetchone()
+
+        #Removing the post we just grabbed
+        self.conn.execute(
+            sqlalchemy.text(
+                "DELETE FROM queue WHERE index = 0;"
+            )
+        )
+
+        #Updating all of the posts above this one so that the index
+        #decreasses by one.
+        self.conn.execute(
+            sqlalchemy.text(
+                "UPDATE queue "+
+                "SET index = index - 1 "+
+                f"WHERE index > 0"
+            )
+        )
+        self.conn.commit()
+
+        self.conn.close()
+
+        return post

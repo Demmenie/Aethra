@@ -1,4 +1,4 @@
-#02/07/2024
+#13/07/2024
 #Chico Demmenie
 #Aethra/Scraper/Maintenance.py
 
@@ -6,8 +6,8 @@ import pymongo
 import json
 import bson
 import copy
-from MongoAccess import mongoServe
 from dbAccess import dbAccess
+from utils import utils
 import videohash2
 import shutil
 import datetime
@@ -44,6 +44,7 @@ class maintenance:
         self.lists = list(self.db.lists.find({"_id": bson.ObjectId("64adabd75fa42c8c80b3931b")}))[0]
 
         self.dba = dbAccess()
+        self.utils = utils()
 
 
     def orderCheck(self):
@@ -136,7 +137,7 @@ class maintenance:
         
 
         #Cycling through each video in the mongo DB
-        for index in range(0, self.count):
+        for index in range(16816, self.count):
 
             doc = self.video.find_one({"index": index})
 
@@ -147,8 +148,8 @@ class maintenance:
 
                 print(post)
 
-                postCheck = self.dba.postCheck(post["platform"], post["id"],
-                    post["author"])
+                postCheck = self.dba.postCheck(post["platform"], post["author"],
+                    post["id"])
                 
                 if postCheck != "preexist":
 
@@ -159,7 +160,18 @@ class maintenance:
 
                         print(url)
 
-                        self.vh(url)
+                        vidLength = videohash2.video_duration(url=url)
+
+                        if vidLength < 300:
+                            
+                            try:
+                                vidHashHex, vidHashDec = self.utils.videoHash(url)
+
+                            except UnboundLocalError as err:
+                                continue
+
+                        else:
+                            continue
 
                     except videohash2.exceptions.DownloadFailed as err:
                         print(f"Exception occurred:\n {err}"+
@@ -173,8 +185,8 @@ class maintenance:
                     
                     #Creating the post class
                     class postCl:
-                        hashHex = self.videoHashHex
-                        hashDec = self.videoHashDec
+                        hashHex = vidHashHex
+                        hashDec = vidHashDec
                         platform = "telegram"
                         id = str(post["id"])
                         author = post["author"]
@@ -183,8 +195,8 @@ class maintenance:
                         uTime = post["uploadTime"]
                     
                     #Checking to see if the post/video already exist.
-                    check = self.dba.vidCheck(postCl.platform, postCl.id,
-                        postCl.author, postCl.hashHex)
+                    check = self.dba.vidCheck(postCl.platform, postCl.author,
+                        postCl.id, postCl.hashHex)
                     
                     #If the video already exists we add the post to the video.
                     if check != None and check != "preexist":
@@ -194,34 +206,13 @@ class maintenance:
 
                     #If the video doesn't exist yet, we make a new video entry.
                     elif check == None:
-                        self.dba.newVid(postCl, postCl.hashDec, postCl.hashHex)
+                        self.dba.newVid(postCl)
 
                 #Removing the post to save memory
                 doc["postList"].remove(post)
                 
             #Removeing the video to save memory.
             #self.allDocs.remove(doc)
-
-
-    def vh(self, url):
-
-        """Hashes videos from a url"""
-
-        #Creating the hash and storing the Hex and Decimal
-        vHash = videohash2.VideoHash(url=url, frame_interval=12)
-        self.videoHashHex = vHash.hash_hex
-        self.videoHashDec = int(self.videoHashHex, 16)
-        self.videoLen = round(vHash.video_duration)
-
-        #print(self.videoHashHex, self.videoHashDec)
-
-        videoPath = vHash.storage_path
-        cutPath = videoPath[:videoPath.find("temp_storage_dir")]
-
-        try:
-            shutil.rmtree(cutPath)
-        except OSError as e:
-            print("Error: %s - %s." % (e.filename, e.strerror))
 
 
     def moveList(self):
