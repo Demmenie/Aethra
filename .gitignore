@@ -1,8 +1,10 @@
 *.pyc
-/web/test.py
-/crawler/test.py
-/data
-/web/data
-/web/.gcloudignore
-/web/node_modules
-/.vscode
+web/test.py
+crawler/test.py
+data/keys.json
+web/data
+*keys.json
+web/.gcloudignore
+web/node_modules
+.vscode
+pgAdmin
