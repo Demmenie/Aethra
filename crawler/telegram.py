@@ -42,19 +42,16 @@ class telegram:
                         channel, userIndex)
                 posts = tg.TelegramChannelScraper(channel).get_items()
 
+                for index, post in enumerate(posts):
+                    if index > 10:
+                        break
+
+                    self.utils.resolve(channel, post)
+
             except snscrape.base.ScraperException as err:
                 print(f"[{datetime.datetime.now()}] Caught: {err}",
                         "continuing.")
-                continue
-
-            for index, post in enumerate(posts):
-                
-                if index > 10:
-                    break
-
-                self.utils.resolve(channel, post)
-
-                    
+                continue                    
 
 
     #---------------------------------------------------------------------------
@@ -73,13 +70,12 @@ class telegram:
                     f"from {channel}")
             posts = tg.TelegramChannelScraper(user).get_items()
 
+            for post in posts:
+                self.utils.resolve(user, post)
+
         except snscrape.base.ScraperException as err:
             print(f"[{datetime.datetime.now()}] Caught: {err}",
                     "continuing.")
-
-        for post in posts:
-            
-            self.utils.resolve(user, post)
 
 
 if __name__ == "__main__":
